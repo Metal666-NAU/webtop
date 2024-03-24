@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Settings</title>
+		<!-- Meta -->
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<!-- CSS -->
+		<link
+			rel="stylesheet"
+			href="/css/common.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="/css/window.css"
+		/>
+		<!-- JS -->
+		<script src="/js/common.js"></script>
+		<script>
+			/** @type {number} */
+			let index;
+
+			setupMessageHandler(window, [
+				{
+					action: "set-index",
+					handler: (data) => {
+						index = data.index;
+
+						window.parent.postMessage({
+							action: "set-icon",
+							index: index,
+							icon: "settings",
+						});
+					},
+				},
+			]);
+		</script>
+	</head>
+	<body></body>
+</html>

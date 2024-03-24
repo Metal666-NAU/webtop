@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>TITLE HERE</title>
+		<meta charset="UTF-8" />
+		<!-- Meta -->
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<!-- CSS -->
+		<link
+			rel="stylesheet"
+			href="/css/common.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="/css/index.css"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1"
+			rel="stylesheet"
+		/>
+		<!-- JS -->
+		<script src="/js/utilities.js"></script>
+		<script src="/js/common.js"></script>
+	</head>
+	<body>
+		<div id="desktop">
+			<div id="windows-container"></div>
+		</div>
+		<div id="taskbar">
+			<div id="taskbar-icons-container"></div>
+		</div>
+		<!-- Templates -->
+		<template id="window-frame-template">
+			<div class="window-frame">
+				<div class="window-titlebar">
+					<span class="window-icon material-symbols-outlined"></span>
+					<span class="window-name"></span>
+					<button class="window-close-button">
+						<span class="material-symbols-outlined">close</span>
+					</button>
+				</div>
+				<iframe
+					class="window-content"
+					frameborder="0"
+				></iframe>
+			</div>
+		</template>
+		<template id="taskbar-icon-template">
+			<button class="taskbar-icon-container">
+				<span class="taskbar-icon material-symbols-outlined"></span>
+			</button>
+		</template>
+		<!-- Scripts -->
+		<script src="/js/scripts.js"></script>
+	</body>
+</html>
