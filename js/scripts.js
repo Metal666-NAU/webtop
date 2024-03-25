@@ -184,6 +184,21 @@ const apps = [
 		name: "Task Manager",
 		icon_id: "browse_activity",
 	},
+	{
+		id: "music_player",
+		name: "Music Player",
+		icon_id: "speaker",
+	},
+	{
+		id: "video_player",
+		name: "Video Player",
+		icon_id: "movie",
+	},
+	{
+		id: "photo_viewer",
+		name: "Photo Viewer",
+		icon_id: "image",
+	},
 ];
 
 /**
@@ -203,6 +218,24 @@ let resizedWindow = null;
 
 /** @param {App} app  */
 function runApp(app) {
+	function moveWindowToTop() {
+		const topZIndex = tasks.length - 1;
+		const currentZIndex = +windowFrame.frame.style.zIndex;
+
+		tasks.forEach((task) => {
+			const frame = task.window.frame;
+			const zIndex = +frame.style.zIndex;
+
+			if (zIndex <= currentZIndex) {
+				return;
+			}
+
+			frame.style.zIndex = zIndex - 1;
+		});
+
+		windowFrame.frame.style.zIndex = topZIndex;
+	}
+
 	const windowFrame = new WindowFrame(app);
 	const taskbarIcon = new TaskbarIcon(app);
 
@@ -214,6 +247,7 @@ function runApp(app) {
 		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
 
 		toggleStartMenu(false);
+		moveWindowToTop();
 	});
 
 	windowFrame.border.addEventListener("mousedown", (event) => {
@@ -224,6 +258,7 @@ function runApp(app) {
 			`${resizedWindow.resizeSide % 2 == 0 ? "ns" : "ew"}-resize`
 		);
 		toggleStartMenu(false);
+		moveWindowToTop();
 	});
 
 	/** @type {Task} */
@@ -245,6 +280,8 @@ function runApp(app) {
 	windowFrame.closeButton.addEventListener("click", (event) =>
 		stopApp(index)
 	);
+
+	windowFrame.frame.style.zIndex = index;
 
 	dispatchEvent(new CustomEvent("app-run", { detail: task }));
 }
@@ -366,32 +403,24 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 (function () {
 	const body = startMenuApps.createTBody();
 
-	const rowCount = Math.floor(apps.length / 2);
+	for (let i = 0; i < Math.ceil(apps.length / 2); i++) {
+		body.insertRow();
+	}
 
-	for (let row = 0; row < rowCount; row++) {
-		const bodyRow = body.insertRow();
+	for (let i = 0; i < apps.length; i++) {
+		const app = apps[i];
 
-		addApp(row, 0);
+		const bodyRow = body.rows.item(Math.floor(i / 2));
+		const appCell = bodyRow.insertCell();
 
-		if (row + 1 < apps.length) {
-			addApp(row, 1);
-		}
-
-		/**
-		 * @param {number} row
-		 * @param {number} index
-		 */
-		function addApp(row, index) {
-			const app = apps[row + index];
-
-			const appCell = bodyRow.insertCell();
-
-			appCell.innerHTML = `<span class="material-symbols-outlined">${app.icon_id}</span><span>${app.name}</span>`;
-			appCell.addEventListener("click", (event) => {
-				runApp(app);
-				toggleStartMenu();
-			});
-		}
+		appCell.innerHTML = `
+			<span class="material-symbols-outlined">${app.icon_id}</span>
+			<span>${app.name}</span>
+		`;
+		appCell.addEventListener("click", (event) => {
+			runApp(app);
+			toggleStartMenu();
+		});
 	}
 })();
 
