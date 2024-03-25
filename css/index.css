@@ -9,6 +9,7 @@ body {
 	background-color: var(--crust);
 	margin: 0px;
 	user-select: none;
+	overflow: hidden;
 }
 
 #desktop {
@@ -48,9 +49,10 @@ body {
 	position: absolute;
 	display: flex;
 	flex-direction: column;
-	width: 400px;
-	height: 300px;
+	min-width: 400px;
+	min-height: 300px;
 	background-color: var(--mantle);
+	outline: 2px solid var(--base);
 }
 
 .window-titlebar {
@@ -74,6 +76,11 @@ body {
 	margin: 2px 0px;
 }
 
+.window-icon,
+.window-name {
+	pointer-events: none;
+}
+
 .window-close-button {
 	width: 40px;
 	height: 100%;
@@ -85,7 +92,39 @@ body {
 	background-color: var(--red);
 }
 
+.window-content-container {
+	height: 100%;
+}
+
 .window-content {
+	position: absolute;
 	width: 100%;
 	height: 100%;
+}
+
+.window-content-barrier {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.window-border {
+	--border-width: 10px;
+	position: absolute;
+	width: calc(100% + var(--border-width) * 2);
+	height: calc(100% + var(--border-width) * 2);
+	margin: calc(var(--border-width) * -1);
+	clip-path: polygon(
+		evenodd,
+		0 0,
+		100% 0,
+		100% 100%,
+		0 100%,
+		0 0,
+		var(--border-width) var(--border-width),
+		calc(100% - var(--border-width)) var(--border-width),
+		calc(100% - var(--border-width)) calc(100% - var(--border-width)),
+		var(--border-width) calc(100% - var(--border-width)),
+		var(--border-width) var(--border-width)
+	);
 }
