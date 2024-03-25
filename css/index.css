@@ -60,6 +60,8 @@ body {
 }
 
 #taskbar {
+	display: flex;
+	flex-direction: column;
 	min-width: var(--taskbar-width);
 	max-width: var(--taskbar-width);
 	height: 100%;
@@ -90,6 +92,10 @@ body {
 	border-radius: 5px;
 }
 
+#taskbar-icons-container {
+	flex-grow: 1;
+}
+
 .taskbar-icon-container {
 	width: 100%;
 	aspect-ratio: 1 / 0.8;
@@ -110,6 +116,29 @@ body {
 .taskbar-icon {
 	color: var(--subtext1);
 	font-variation-settings: "FILL" 1;
+}
+
+#taskbar-clock-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin: 10px 5px;
+	padding: 5px 0px;
+	background-color: var(--mantle);
+	border-radius: 5px;
+}
+
+#taskbar-clock-hours {
+	font-weight: bold;
+}
+
+#taskbar-clock-hours,
+#taskbar-clock-minutes {
+	font-size: 1.75em;
+}
+
+#taskbar-clock-seconds {
+	color: var(--overlay2);
 }
 
 .window-frame {

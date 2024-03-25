@@ -7,6 +7,9 @@ const windowsContainer = document.getElementById("windows-container");
 const taskbarIconsContainer = document.getElementById(
 	"taskbar-icons-container"
 );
+const taskbarClockHours = document.getElementById("taskbar-clock-hours");
+const taskbarClockMinutes = document.getElementById("taskbar-clock-minutes");
+const taskbarClockSeconds = document.getElementById("taskbar-clock-seconds");
 /** @type {HTMLTemplateElement} */
 const windowFrameTemplate = document.getElementById("window-frame-template");
 /** @type {HTMLTemplateElement} */
@@ -390,6 +393,18 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 			});
 		}
 	}
+})();
+
+(function updateClock() {
+	const padNumber = (number) => String(number).padStart(2, "0");
+
+	const date = new Date();
+
+	taskbarClockHours.innerText = padNumber(date.getHours());
+	taskbarClockMinutes.innerText = padNumber(date.getMinutes());
+	taskbarClockSeconds.innerText = padNumber(date.getSeconds());
+
+	setTimeout(updateClock, 1000);
 })();
 
 setupMessageHandler(window, [
