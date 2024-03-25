@@ -1,4 +1,8 @@
 const desktop = document.getElementById("desktop");
+const startMenu = document.getElementById("start-menu");
+/** @type {HTMLTableElement} */
+const startMenuApps = document.getElementById("start-menu-apps");
+const startButton = document.getElementById("start-button");
 const windowsContainer = document.getElementById("windows-container");
 const taskbarIconsContainer = document.getElementById(
 	"taskbar-icons-container"
@@ -11,20 +15,21 @@ const taskbarIconTemplate = document.getElementById("taskbar-icon-template");
 class WindowFrame {
 	static borderWidth = 10;
 
-	/**
-	 * @param {string} windowName
-	 */
-	constructor(windowName) {
+	/** @param {App} app  */
+	constructor(app) {
 		/** @type {DocumentFragment} */
 		const documentFragment = windowFrameTemplate.content.cloneNode(true);
 
 		const name = documentFragment.querySelector(".window-name");
+
+		name.innerText = app.name;
+
 		/** @type {HTMLIFrameElement} */
 		const content = documentFragment.querySelector(".window-content");
 
-		content.src = `/windows/${windowName}.html`;
+		content.src = `/windows/${app.id}.html`;
 		content.addEventListener("load", () => {
-			name.innerText = content.contentDocument.title;
+			content.contentDocument.title = app.name;
 		});
 
 		/** @type {HTMLButtonElement} */
@@ -149,18 +154,39 @@ class TaskbarIcon {
 	}
 }
 
+/**
+ * @typedef {Object} App
+ * @property {string} id
+ * @property {string} name
+ * @property {string} icon_id
+ */
+
 /** @type {Array<WindowFrame>} */
 const windowFrames = [];
 /** @type {Array<TaskbarIcon>} */
 const taskbarIcons = [];
+/** @type {Array<App>} */
+const apps = [
+	{
+		id: "settings",
+		name: "Settings",
+		icon_id: "settings",
+	},
+	{
+		id: "task_manager",
+		name: "Task Manager",
+		icon_id: "browse_activity",
+	},
+];
 
 /** @type {WindowFrame} */
 let draggedWindow = null;
 /** @type {WindowFrame} */
 let resizedWindow = null;
 
-function openWindow(name) {
-	const windowFrame = new WindowFrame(name);
+/** @param {App} app  */
+function openWindow(app) {
+	const windowFrame = new WindowFrame(app);
 
 	const index = windowFrames.push(windowFrame) - 1;
 	windowsContainer.appendChild(windowFrame.documentFragment);
@@ -170,9 +196,14 @@ function openWindow(name) {
 	taskbarIcons.push(taskbarIcon);
 	taskbarIconsContainer.appendChild(taskbarIcon.documentFragment);
 
+	windowFrame.icon.innerText = app.icon_id;
+	taskbarIcon.icon.innerText = app.icon_id;
+
 	windowFrame.titlebar.addEventListener("mousedown", (event) => {
 		draggedWindow = windowFrame;
 		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
+
+		toggleStartMenu(false);
 	});
 
 	windowFrame.closeButton.addEventListener("click", (event) =>
@@ -193,6 +224,7 @@ function openWindow(name) {
 		setGlobalCursor(
 			`${resizedWindow.resizeSide % 2 == 0 ? "ns" : "ew"}-resize`
 		);
+		toggleStartMenu(false);
 	});
 }
 
@@ -205,8 +237,14 @@ function closeWindow(index) {
 	taskbarIconsContainer.removeChild(taskbarIcon.container);
 }
 
+/** @param {string} cursor */
 function setGlobalCursor(cursor) {
 	document.body.style.cursor = cursor;
+}
+
+/** @param {boolean} force */
+function toggleStartMenu(force) {
+	startMenu.classList.toggle("open", force);
 }
 
 addEventListener("mousemove", (event) => {
@@ -301,14 +339,48 @@ addEventListener("mouseup", () => {
 	}
 });
 
-setupMessageHandler(window, [
-	{
-		action: "set-icon",
-		handler: (data) => {
-			windowFrames[data.index].icon.innerText = data.icon;
-			taskbarIcons[data.index].icon.innerText = data.icon;
-		},
-	},
-]);
+startButton.addEventListener("click", (event) => toggleStartMenu());
 
-openWindow("settings");
+(function () {
+	const head = startMenuApps.createTHead();
+	const headRow = head.insertRow();
+	/** @type {HTMLTableCellElement} */
+	const headCell = document.createElement("th");
+
+	headCell.colSpan = 2;
+	headCell.textContent = "Applications";
+
+	headRow.appendChild(headCell);
+
+	const body = startMenuApps.createTBody();
+
+	const rowCount = Math.floor(apps.length / 2);
+
+	for (let row = 0; row < rowCount; row++) {
+		const bodyRow = body.insertRow();
+
+		addApp(row, 0);
+
+		if (row + 1 < apps.length) {
+			addApp(row, 1);
+		}
+
+		/**
+		 * @param {number} row
+		 * @param {number} index
+		 */
+		function addApp(row, index) {
+			const app = apps[row + index];
+
+			const appCell = bodyRow.insertCell();
+
+			appCell.innerHTML = `<span class="material-symbols-outlined">${app.icon_id}</span><span>${app.name}</span>`;
+			appCell.addEventListener("click", (event) => {
+				openWindow(app);
+				toggleStartMenu();
+			});
+		}
+	}
+})();
+
+setupMessageHandler(window, []);

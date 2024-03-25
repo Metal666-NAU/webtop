@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Settings</title>
 		<!-- Meta -->
 		<meta charset="UTF-8" />
 		<meta
@@ -28,12 +27,6 @@
 					action: "set-index",
 					handler: (data) => {
 						index = data.index;
-
-						window.parent.postMessage({
-							action: "set-icon",
-							index: index,
-							icon: "settings",
-						});
 					},
 				},
 			]);
