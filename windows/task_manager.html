@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Meta -->
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<!-- CSS -->
+		<link
+			rel="stylesheet"
+			href="/css/common.css"
+		/>
+	</head>
+	<body>
+		<table id="tasks">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>-</th>
+					<th>-</th>
+				</tr>
+			</thead>
+		</table>
+		<script>
+			/** @type {HTMLTableElement} */
+			const tasksTable = document.getElementById("tasks");
+			/** @type {HTMLTableSectionElement} */
+			const tasksTableBody = tasksTable.createTBody();
+
+			function addTask(task) {
+				const taskRow = tasksTableBody.insertRow();
+				const taskNameCell = taskRow.insertCell();
+
+				taskNameCell.innerText = task.app.name;
+			}
+
+			function removeTask(index) {
+				tasksTableBody.deleteRow(index);
+			}
+
+			parent.addEventListener("app-run", (event) =>
+				addTask(event.detail)
+			);
+			parent.addEventListener("app-stopped", (event) =>
+				removeTask(event.detail)
+			);
+
+			parent.tasks.forEach(addTask);
+		</script>
+	</body>
+</html>

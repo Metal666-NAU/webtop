@@ -20,6 +20,11 @@ class WindowFrame {
 		/** @type {DocumentFragment} */
 		const documentFragment = windowFrameTemplate.content.cloneNode(true);
 
+		/** @type {HTMLElement} */
+		const icon = documentFragment.querySelector(".window-icon");
+
+		icon.innerText = app.icon_id;
+
 		const name = documentFragment.querySelector(".window-name");
 
 		name.innerText = app.name;
@@ -65,7 +70,7 @@ class WindowFrame {
 		this.frame = documentFragment.querySelector(".window-frame");
 		/** @type {HTMLElement} */
 		this.titlebar = documentFragment.querySelector(".window-titlebar");
-		this.icon = documentFragment.querySelector(".window-icon");
+		this.icon = icon;
 		this.name = name;
 		/** @type {HTMLElement} */
 		this.contentBarrier = documentFragment.querySelector(
@@ -139,12 +144,15 @@ class WindowFrame {
 }
 
 class TaskbarIcon {
-	constructor() {
+	/** @param {App} app */
+	constructor(app) {
 		/** @type {DocumentFragment} */
 		const documentFragment = taskbarIconTemplate.content.cloneNode(true);
 
 		/** @type {HTMLElement} */
 		const icon = documentFragment.querySelector(".taskbar-icon");
+
+		icon.innerText = app.icon_id;
 
 		this.documentFragment = documentFragment;
 		this.container = documentFragment.querySelector(
@@ -161,10 +169,6 @@ class TaskbarIcon {
  * @property {string} icon_id
  */
 
-/** @type {Array<WindowFrame>} */
-const windowFrames = [];
-/** @type {Array<TaskbarIcon>} */
-const taskbarIcons = [];
 /** @type {Array<App>} */
 const apps = [
 	{
@@ -179,42 +183,34 @@ const apps = [
 	},
 ];
 
+/**
+ * @typedef {Object} Task
+ * @property {WindowFrame} window
+ * @property {TaskbarIcon} icon
+ * @property {App} app
+ */
+
+/** @type {Array<Task>} */
+this.tasks = [];
+
 /** @type {WindowFrame} */
 let draggedWindow = null;
 /** @type {WindowFrame} */
 let resizedWindow = null;
 
 /** @param {App} app  */
-function openWindow(app) {
+function runApp(app) {
 	const windowFrame = new WindowFrame(app);
+	const taskbarIcon = new TaskbarIcon(app);
 
-	const index = windowFrames.push(windowFrame) - 1;
 	windowsContainer.appendChild(windowFrame.documentFragment);
-
-	const taskbarIcon = new TaskbarIcon();
-
-	taskbarIcons.push(taskbarIcon);
 	taskbarIconsContainer.appendChild(taskbarIcon.documentFragment);
-
-	windowFrame.icon.innerText = app.icon_id;
-	taskbarIcon.icon.innerText = app.icon_id;
 
 	windowFrame.titlebar.addEventListener("mousedown", (event) => {
 		draggedWindow = windowFrame;
 		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
 
 		toggleStartMenu(false);
-	});
-
-	windowFrame.closeButton.addEventListener("click", (event) =>
-		closeWindow(index)
-	);
-
-	windowFrame.content.addEventListener("load", (event) => {
-		windowFrame.content.contentWindow.postMessage({
-			action: "set-index",
-			index: index,
-		});
 	});
 
 	windowFrame.border.addEventListener("mousedown", (event) => {
@@ -226,15 +222,38 @@ function openWindow(app) {
 		);
 		toggleStartMenu(false);
 	});
+
+	/** @type {Task} */
+	const task = {
+		window: windowFrame,
+		icon: taskbarIcon,
+		app: app,
+	};
+
+	const index = tasks.push(task) - 1;
+
+	windowFrame.content.addEventListener("load", (event) => {
+		windowFrame.content.contentWindow.postMessage({
+			action: "set-index",
+			index: index,
+		});
+	});
+
+	windowFrame.closeButton.addEventListener("click", (event) =>
+		stopApp(index)
+	);
+
+	dispatchEvent(new CustomEvent("app-run", { detail: task }));
 }
 
-/** @param {WindowFrame} windowFrame */
-function closeWindow(index) {
-	const windowFrame = windowFrames.splice(index, 1)[0];
-	windowsContainer.removeChild(windowFrame.frame);
+/** @param {number} index */
+function stopApp(index) {
+	const task = tasks.splice(index, 1)[0];
 
-	const taskbarIcon = taskbarIcons.splice(index, 1)[0];
-	taskbarIconsContainer.removeChild(taskbarIcon.container);
+	windowsContainer.removeChild(task.window.frame);
+	taskbarIconsContainer.removeChild(task.icon.container);
+
+	dispatchEvent(new CustomEvent("app-stopped", { detail: index }));
 }
 
 /** @param {string} cursor */
@@ -342,16 +361,6 @@ addEventListener("mouseup", () => {
 startButton.addEventListener("click", (event) => toggleStartMenu());
 
 (function () {
-	const head = startMenuApps.createTHead();
-	const headRow = head.insertRow();
-	/** @type {HTMLTableCellElement} */
-	const headCell = document.createElement("th");
-
-	headCell.colSpan = 2;
-	headCell.textContent = "Applications";
-
-	headRow.appendChild(headCell);
-
 	const body = startMenuApps.createTBody();
 
 	const rowCount = Math.floor(apps.length / 2);
@@ -376,7 +385,7 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 
 			appCell.innerHTML = `<span class="material-symbols-outlined">${app.icon_id}</span><span>${app.name}</span>`;
 			appCell.addEventListener("click", (event) => {
-				openWindow(app);
+				runApp(app);
 				toggleStartMenu();
 			});
 		}

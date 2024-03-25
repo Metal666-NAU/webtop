@@ -49,19 +49,6 @@
 		<!-- JS -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 		<script src="/js/common.js"></script>
-		<script type="text/javascript">
-			/** @type {number} */
-			let index;
-
-			setupMessageHandler(window, [
-				{
-					action: "set-index",
-					handler: (data) => {
-						index = data.index;
-					},
-				},
-			]);
-		</script>
 	</head>
 	<body>
 		<form id="settings-form">
