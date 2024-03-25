@@ -7,7 +7,6 @@ body {
 	flex-direction: row;
 	height: 100%;
 	background-color: var(--crust);
-	margin: 0px;
 	user-select: none;
 	overflow: hidden;
 }
@@ -153,14 +152,6 @@ body {
 	width: 40px;
 	height: 100%;
 	background-color: var(--mantle);
-}
-
-.window-close-button:hover {
-	background-color: var(--red);
-}
-
-.window-close-button:hover * {
-	color: var(--crust);
 }
 
 .window-content-container {

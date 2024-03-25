@@ -9,17 +9,58 @@
 		/>
 		<!-- CSS -->
 		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1"
+			rel="stylesheet"
+		/>
+		<link
 			rel="stylesheet"
 			href="/css/common.css"
 		/>
+		<style>
+			#tasks {
+				width: 100%;
+			}
+
+			#tasks thead {
+				background-color: var(--base);
+			}
+
+			#tasks thead th {
+				text-align: left;
+				padding: 2px;
+			}
+
+			#tasks thead th:not(:first-child, :last-child),
+			#tasks thead td:not(:first-child, :last-child) {
+				border-left: 2px solid var(--surface1);
+				border-right: 2px solid var(--surface1);
+			}
+
+			.kill-task-button {
+				color: var(--text);
+				background-color: var(--base);
+				white-space: nowrap;
+			}
+
+			.kill-task-button > span {
+				font-size: 1.25em;
+			}
+		</style>
 	</head>
 	<body>
 		<table id="tasks">
+			<colgroup>
+				<col span="2" />
+				<col
+					span="1"
+					width="0"
+				/>
+			</colgroup>
 			<thead>
 				<tr>
 					<th>Name</th>
-					<th>-</th>
-					<th>-</th>
+					<th></th>
+					<th></th>
 				</tr>
 			</thead>
 		</table>
@@ -34,6 +75,26 @@
 				const taskNameCell = taskRow.insertCell();
 
 				taskNameCell.innerText = task.app.name;
+
+				const tempCell = taskRow.insertCell();
+
+				const killTaskCell = taskRow.insertCell();
+				/** @type {HTMLButtonElement} */
+				const killTaskButton = document.createElement("button");
+
+				killTaskButton.classList.add("kill-task-button", "negative");
+				killTaskButton.innerHTML = `
+					<span>Kill</span>
+					<span class="material-symbols-outlined">close</span>
+				`;
+				killTaskButton.addEventListener("click", (event) => {
+					parent.postMessage({
+						action: "kill-app",
+						index: parent.tasks.indexOf(task),
+					});
+				});
+
+				killTaskCell.appendChild(killTaskButton);
 			}
 
 			function removeTask(index) {

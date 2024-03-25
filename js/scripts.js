@@ -392,4 +392,11 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 	}
 })();
 
-setupMessageHandler(window, []);
+setupMessageHandler(window, [
+	{
+		action: "kill-app",
+		handler: (data) => {
+			stopApp(data.index);
+		},
+	},
+]);

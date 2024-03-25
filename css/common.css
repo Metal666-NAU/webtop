@@ -13,10 +13,30 @@
 	--crust: #11111b;
 
 	height: 100%;
-	font-family: "Courier New", Courier, monospace;
 	color: var(--text);
+}
+
+:root,
+button {
+	font-family: "Courier New", Courier, monospace;
+}
+
+body {
+	margin: 0px;
 }
 
 button {
 	border-width: 0px;
+}
+
+button.negative * {
+	vertical-align: middle;
+}
+
+button.negative:hover {
+	background-color: var(--red);
+}
+
+button.negative:hover * {
+	color: var(--crust);
 }
