@@ -86,7 +86,7 @@ class WindowFrame {
 	/** @param {boolean} show */
 	showResizeOutline(show) {
 		this.frame.style.boxShadow = show
-			? "0px 0px 5px 2px var(--mauve)"
+			? "0px 0px 5px 2px var(--accent-color)"
 			: null;
 	}
 

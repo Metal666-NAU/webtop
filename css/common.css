@@ -1,7 +1,5 @@
 :root {
 	/* https://github.com/catppuccin/catppuccin?tab=readme-ov-file#-palette */
-	--pink: #f5c2e7;
-	--mauve: #cba6f7;
 	--red: #f38ba8;
 	--text: #cdd6f4;
 	--subtext1: #bac2de;
@@ -14,7 +12,9 @@
 	--mantle: #181825;
 	--crust: #11111b;
 
+	height: 100%;
 	font-family: "Courier New", Courier, monospace;
+	color: var(--text);
 }
 
 button {

@@ -12,13 +12,44 @@
 			rel="stylesheet"
 			href="/css/common.css"
 		/>
-		<link
-			rel="stylesheet"
-			href="/css/window.css"
-		/>
+		<style>
+			#settings-form ul {
+				list-style-type: none;
+				padding-left: 15px;
+			}
+
+			#settings-form > ul > li > h2 {
+				margin: 0px;
+			}
+
+			#settings-form > ul ul > li {
+				display: flex;
+				align-items: center;
+			}
+
+			.setting-name {
+				font-size: 1.2em;
+				width: 100%;
+			}
+
+			input[type="color"] {
+				width: 70px;
+				height: 35px;
+				background-color: var(--base);
+				border-width: 0px;
+				border-radius: 2px;
+				cursor: pointer;
+				padding: 4px;
+			}
+
+			input[type="color"]:hover {
+				background-color: var(--surface0);
+			}
+		</style>
 		<!-- JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 		<script src="/js/common.js"></script>
-		<script>
+		<script type="text/javascript">
 			/** @type {number} */
 			let index;
 
@@ -32,5 +63,48 @@
 			]);
 		</script>
 	</head>
-	<body></body>
+	<body>
+		<form id="settings-form">
+			<div>
+				<button>Save</button>
+			</div>
+			<ul>
+				<li>
+					<h2>Display</h2>
+				</li>
+				<li>
+					<ul>
+						<li>
+							<span class="setting-name">Accent Color</span
+							><input
+								name="accent-color"
+								type="color"
+							/>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</form>
+		<script>
+			const form = document.forms.namedItem("settings-form");
+			const accentColor = form.elements.namedItem("accent-color");
+
+			accentColor.value =
+				document.documentElement.style.getPropertyValue(
+					"--accent-color"
+				);
+
+			form.addEventListener("submit", (event) => {
+				const value = accentColor.value;
+
+				localStorage.setItem(settingKeys.accentColor, value);
+				localStorage.setItem(
+					settingKeys.onAccentColor,
+					`var(${
+						chroma(value).luminance() > 0.5 ? "--crust" : "--text"
+					})`
+				);
+			});
+		</script>
+	</body>
 </html>

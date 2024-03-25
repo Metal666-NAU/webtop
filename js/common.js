@@ -4,6 +4,11 @@
  * @property {Function} handler
  */
 
+const settingKeys = {
+	accentColor: "accent-color",
+	onAccentColor: "on-accent-color",
+};
+
 /**
  * @param {Window} window
  * @param {Array<MessageHandler>} handlers
@@ -33,3 +38,36 @@ function setupMessageHandler(window, handlers) {
 		handlerMatches.forEach((handler) => handler.handler(data));
 	});
 }
+
+/** @type {string} */
+function updateAccentColor(accentColor) {
+	document.documentElement.style.setProperty("--accent-color", accentColor);
+}
+
+/** @type {string} */
+function updateOnAccentColor(onAccentColor) {
+	document.documentElement.style.setProperty(
+		"--on-accent-color",
+		onAccentColor
+	);
+}
+
+addEventListener("storage", (event) => {
+	switch (event.key) {
+		case settingKeys.accentColor: {
+			updateAccentColor(event.newValue);
+
+			break;
+		}
+		case settingKeys.onAccentColor: {
+			updateOnAccentColor(event.newValue);
+
+			break;
+		}
+	}
+});
+
+updateAccentColor(localStorage.getItem(settingKeys.accentColor) ?? "#cba6f7");
+updateOnAccentColor(
+	localStorage.getItem(settingKeys.onAccentColor) ?? "var(--text)"
+);

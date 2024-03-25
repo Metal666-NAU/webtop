@@ -1,7 +1,5 @@
 :root {
 	--taskbar-width: 60px;
-	height: 100%;
-	color: var(--text);
 }
 
 body {
@@ -72,7 +70,7 @@ body {
 #start-button {
 	width: 100%;
 	aspect-ratio: 1;
-	background-color: var(--crust);
+	background-color: var(--mantle);
 	color: var(--text);
 }
 
@@ -81,13 +79,14 @@ body {
 }
 
 #start-button:hover > #start-button-icon {
-	background-color: var(--surface0);
+	color: var(--on-accent-color);
+	background-color: var(--accent-color);
 }
 
 #start-button-icon {
 	font-size: 28px;
 	padding: 5px;
-	background-color: var(--mantle);
+	background-color: var(--crust);
 	border: 1px solid var(--surface0);
 	border-radius: 5px;
 }
@@ -96,17 +95,17 @@ body {
 	width: 100%;
 	aspect-ratio: 1 / 0.8;
 	border-width: 0px;
-	border-right: 3px solid var(--mauve);
+	border-right: 3px solid var(--accent-color);
 	background-color: var(--surface0);
 }
 
 .taskbar-icon-container:hover {
 	border-right-color: var(--crust);
-	background-color: var(--mauve);
+	background-color: var(--accent-color);
 }
 
 .taskbar-icon-container:hover .taskbar-icon {
-	color: var(--crust);
+	color: var(--on-accent-color);
 }
 
 .taskbar-icon {
