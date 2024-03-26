@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Meta -->
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<!-- CSS -->
+		<link
+			rel="stylesheet"
+			href="/css/common.css"
+		/>
+		<style>
+			body {
+				display: flex;
+				flex-direction: column;
+			}
+
+			#navigation-bar {
+				display: flex;
+				box-sizing: border-box;
+				align-items: stretch;
+				column-gap: 5px;
+				border-bottom: 1px solid var(--surface0);
+				padding: 3px;
+			}
+
+			#navigation-bar > button {
+				padding: 0px;
+				margin: 0px;
+				aspect-ratio: 1;
+				background-color: var(--base);
+				border-radius: 5px;
+			}
+
+			#navigation-bar > button:hover {
+				background-color: var(--surface0);
+			}
+
+			#navigation-bar > button > span {
+				font-size: 26px;
+			}
+
+			#navigation-bar > button > span,
+			#entries-table td > span {
+				font-variation-settings: "wght" 200;
+				vertical-align: middle;
+			}
+
+			#breadcrumbs-container {
+				display: flex;
+				flex-grow: 1;
+				list-style-type: none;
+				margin: 0px;
+				padding: 0px;
+			}
+
+			.breadcrumb {
+				display: flex;
+				align-items: center;
+				height: 100%;
+				background-color: var(--base);
+				padding: 0px 5px;
+				border-radius: 5px;
+			}
+
+			.breadcrumb-anchor {
+				font-size: 1.1em;
+				color: var(--text);
+			}
+
+			.breadcrumb-anchor:not(:hover) {
+				text-decoration: none;
+			}
+
+			#entries-table > thead {
+				text-align: left;
+			}
+
+			#entries-table > tbody > tr:hover {
+				background-color: var(--base);
+				cursor: pointer;
+			}
+
+			#loading-barrier {
+				position: absolute;
+				display: flex;
+				box-sizing: border-box;
+				width: 100%;
+				height: 100%;
+				align-items: center;
+				justify-content: center;
+			}
+		</style>
+		<!-- JS -->
+		<script src="/js/common.js"></script>
+	</head>
+	<body>
+		<div id="navigation-bar">
+			<button id="directory-up-button">
+				<span class="material-symbols-outlined">arrow_upward</span>
+			</button>
+			<ul id="breadcrumbs-container"></ul>
+			<button id="create-folder-button">
+				<span class="material-symbols-outlined">
+					create_new_folder
+				</span>
+			</button>
+		</div>
+		<table id="entries-table">
+			<colgroup>
+				<col span="1" />
+				<col
+					span="1"
+					width="0"
+				/>
+			</colgroup>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+				</tr>
+			</thead>
+			<tbody id="entries-table-body"></tbody>
+		</table>
+		<div id="loading-barrier">
+			<span>Please wait...</span>
+		</div>
+		<!-- Templates -->
+		<template id="breadcrumb-template">
+			<li class="breadcrumb">
+				<a class="breadcrumb-anchor"></a>
+			</li>
+		</template>
+		<!-- Scripts -->
+		<script>
+			/**
+			 * @typedef {Object} PathSegment
+			 * @property {string} value
+			 * @property {HTMLElement} node
+			 */
+
+			const directoryUpButton = document.getElementById(
+				"directory-up-button"
+			);
+			const breadcrumbsContainer = document.getElementById(
+				"breadcrumbs-container"
+			);
+			const createFolderButton = document.getElementById(
+				"create-folder-button"
+			);
+			/** @type {HTMLTableSectionElement} */
+			const entriesTableBody =
+				document.getElementById("entries-table-body");
+			const loadingBarrier = document.getElementById("loading-barrier");
+			/** @type {HTMLTemplateElement} */
+			const breadcrumbTemplate = document.getElementById(
+				"breadcrumb-template"
+			);
+
+			/** @type {FileSystemDirectoryHandle} */
+			let rootDirectory;
+			let currentDirectory;
+
+			function showLoadingBarrier(show) {
+				loadingBarrier.style.display = show ? "inherit" : "none";
+			}
+
+			/** @param {string} path */
+			async function navigate() {
+				showLoadingBarrier(true);
+
+				const path = location.hash.replace("#", "");
+
+				let fixedPath = path.replace(/^\/|\/$/, "");
+
+				if (path !== fixedPath) {
+					location.hash = fixedPath;
+
+					return;
+				}
+
+				const pathSegments = path
+					.split("/")
+					.filter((segment) => segment.length !== 0);
+
+				currentDirectory = rootDirectory;
+
+				for (const segment of pathSegments) {
+					try {
+						currentDirectory =
+							await currentDirectory.getDirectoryHandle(segment);
+					} catch {
+						location.hash = "";
+
+						return;
+					}
+				}
+
+				pathSegments.unshift("");
+
+				breadcrumbsContainer.replaceChildren([]);
+
+				for (let i = pathSegments.length - 1; i >= 0; i--) {
+					/** @type {DocumentFragment} */
+					const documentFragment =
+						breadcrumbTemplate.content.cloneNode(true);
+
+					/** @type {HTMLAnchorElement} */
+					const breadcrumbAnchor =
+						documentFragment.querySelector(".breadcrumb-anchor");
+
+					breadcrumbAnchor.innerText = `${pathSegments[i]}/`;
+					breadcrumbAnchor.href = `#${pathSegments
+						.slice(0, i + 1)
+						.reduceRight(
+							(previousSegment, currentSegment) =>
+								`${previousSegment}/${currentSegment}`
+						)}`;
+
+					breadcrumbsContainer.prepend(documentFragment);
+				}
+
+				entriesTableBody.replaceChildren([]);
+
+				for await (const [key, value] of currentDirectory.entries()) {
+					const entryRow = entriesTableBody.insertRow();
+					const entryNameCell = entryRow.insertCell();
+					const entryTypeCell = entryRow.insertCell();
+
+					entryRow.addEventListener("click", (event) => {
+						location.hash += `/${value.name}`;
+					});
+
+					entryNameCell.innerHTML = `
+					<span class="material-symbols-outlined">${
+						value.kind == "directory" ? "folder" : "description"
+					}</span>
+					<span>${value.name}</span>`;
+					entryTypeCell.innerText = value.kind;
+				}
+
+				showLoadingBarrier(false);
+			}
+
+			addEventListener("hashchange", async (event) => {
+				if (!rootDirectory) {
+					return;
+				}
+
+				await navigate();
+			});
+
+			directoryUpButton.addEventListener("click", async (event) => {
+				location.hash = location.hash.replace(/\/?\w+\/?$/, "");
+			});
+			createFolderButton.addEventListener("click", async (event) => {
+				const directoryName = prompt("Directory name:");
+
+				if (!directoryName) {
+					return;
+				}
+
+				await currentDirectory.getDirectoryHandle(directoryName, {
+					create: true,
+				});
+
+				await navigate();
+			});
+
+			navigator.storage.getDirectory().then(async (directory) => {
+				currentDirectory = rootDirectory = directory;
+
+				await navigate();
+			});
+		</script>
+	</body>
+</html>

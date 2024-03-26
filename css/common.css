@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
 :root {
 	/* https://github.com/catppuccin/catppuccin?tab=readme-ov-file#-palette */
 	--red: #f38ba8;
@@ -14,6 +16,7 @@
 
 	height: 100%;
 	color: var(--text);
+	user-select: none;
 }
 
 :root,
@@ -23,10 +26,12 @@ button {
 
 body {
 	margin: 0px;
+	height: 100%;
 }
 
 button {
 	border-width: 0px;
+	color: var(--text);
 }
 
 button.negative * {

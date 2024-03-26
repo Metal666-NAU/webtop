@@ -199,6 +199,11 @@ const apps = [
 		name: "Photo Viewer",
 		icon_id: "image",
 	},
+	{
+		id: "file_explorer",
+		name: "File Explorer",
+		icon_id: "inventory_2",
+	},
 ];
 
 /**
