@@ -22,6 +22,23 @@
 		<script src="/js/common.js"></script>
 	</head>
 	<body>
+		<div id="lock-screen">
+			<div id="login-panel">
+				<form id="login-form">
+					<h2 id="username"></h2>
+					<label>
+						<span>Password:</span>
+						<input
+							name="password"
+							type="password"
+					/></label>
+					<span id="password-error"
+						>Incorrect password. Please try again.</span
+					>
+					<button>Login</button>
+				</form>
+			</div>
+		</div>
 		<div
 			id="desktop"
 			tabindex="-1"
@@ -30,13 +47,21 @@
 				id="start-menu"
 				tabindex="-1"
 			>
-				<table id="start-menu-apps">
-					<thead>
-						<tr>
-							<th colspan="2">Applications</th>
-						</tr>
-					</thead>
-				</table>
+				<div id="start-menu-apps-container">
+					<table id="start-menu-apps">
+						<thead>
+							<tr>
+								<th colspan="2">Applications</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+				<div>
+					<button id="log-out-button">
+						<span class="material-symbols-outlined">logout</span>
+						<span>Log Out</span>
+					</button>
+				</div>
 			</div>
 			<div id="windows-container"></div>
 		</div>

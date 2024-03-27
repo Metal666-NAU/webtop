@@ -47,6 +47,10 @@ input:focus {
 	outline-width: 0px;
 }
 
+button > span {
+	vertical-align: middle;
+}
+
 button.negative * {
 	vertical-align: middle;
 }

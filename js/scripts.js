@@ -1,7 +1,11 @@
+const lockScreen = document.getElementById("lock-screen");
+const username = document.getElementById("username");
+const passwordError = document.getElementById("password-error");
 const desktop = document.getElementById("desktop");
 const startMenu = document.getElementById("start-menu");
 /** @type {HTMLTableElement} */
 const startMenuApps = document.getElementById("start-menu-apps");
+const logOutButton = document.getElementById("log-out-button");
 const startButton = document.getElementById("start-button");
 const windowsContainer = document.getElementById("windows-container");
 const taskbarIconsContainer = document.getElementById(
@@ -221,6 +225,8 @@ let draggedWindow = null;
 /** @type {WindowFrame} */
 let resizedWindow = null;
 
+const url = new URL(location);
+
 /** @param {App} app  */
 function runApp(app) {
 	function moveWindowToTop() {
@@ -310,6 +316,21 @@ function setGlobalCursor(cursor) {
 function toggleStartMenu(force) {
 	if (startMenu.classList.toggle("open", force)) {
 		startMenu.focus();
+	}
+}
+
+username.innerText = `Welcome back, ${localStorage.getItem(
+	settingKeys.username
+)}!`;
+
+if (url.searchParams.has(settingKeys.password)) {
+	if (
+		url.searchParams.get(settingKeys.password) ===
+		localStorage.getItem(settingKeys.password)
+	) {
+		lockScreen.style.display = "none";
+	} else {
+		passwordError.style.display = "inherit";
 	}
 }
 
@@ -405,8 +426,18 @@ addEventListener("mouseup", () => {
 	}
 });
 
+logOutButton.addEventListener("click", (event) => {
+	url.searchParams.delete(settingKeys.password);
+
+	location.href = url.toString();
+});
+
 startMenu.addEventListener("blur", (event) => {
-	toggleStartMenu(false);
+	if (startMenu.contains(event.relatedTarget)) {
+		return;
+	}
+
+	return toggleStartMenu(false);
 });
 
 startButton.addEventListener("click", (event) => toggleStartMenu());

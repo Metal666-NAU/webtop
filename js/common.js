@@ -70,13 +70,20 @@ addEventListener("storage", (event) => {
 	}
 });
 
-accentColor = localStorage.getItem(settingKeys.accentColor);
+// Have to use uppercase N here since "username" is already a variable in scripts.js :(
+let userName = localStorage.getItem(settingKeys.username);
+
+if (!userName) {
+	localStorage.setItem(settingKeys.username, "<user>");
+}
+
+let accentColor = localStorage.getItem(settingKeys.accentColor);
 
 if (!accentColor) {
 	localStorage.setItem(settingKeys.accentColor, (accentColor = "#cba6f7"));
 }
 
-onAccentColor = localStorage.getItem(settingKeys.onAccentColor);
+let onAccentColor = localStorage.getItem(settingKeys.onAccentColor);
 
 if (!onAccentColor) {
 	localStorage.setItem(
