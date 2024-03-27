@@ -20,7 +20,8 @@
 }
 
 :root,
-button {
+button,
+input {
 	font-family: "Courier New", Courier, monospace;
 }
 
@@ -29,9 +30,21 @@ body {
 	height: 100%;
 }
 
-button {
+button,
+input {
+	padding: 5px;
 	border-width: 0px;
 	color: var(--text);
+	background-color: var(--base);
+}
+
+button:hover,
+input:hover {
+	background-color: var(--surface0);
+}
+
+input:focus {
+	outline-width: 0px;
 }
 
 button.negative * {

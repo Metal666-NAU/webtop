@@ -5,8 +5,11 @@
  */
 
 const settingKeys = {
+	username: "username",
+	password: "password",
 	accentColor: "accent-color",
 	onAccentColor: "on-accent-color",
+	wallpaper: "wallpaper",
 };
 
 /**
@@ -67,7 +70,20 @@ addEventListener("storage", (event) => {
 	}
 });
 
-updateAccentColor(localStorage.getItem(settingKeys.accentColor) ?? "#cba6f7");
-updateOnAccentColor(
-	localStorage.getItem(settingKeys.onAccentColor) ?? "var(--text)"
-);
+accentColor = localStorage.getItem(settingKeys.accentColor);
+
+if (!accentColor) {
+	localStorage.setItem(settingKeys.accentColor, (accentColor = "#cba6f7"));
+}
+
+onAccentColor = localStorage.getItem(settingKeys.onAccentColor);
+
+if (!onAccentColor) {
+	localStorage.setItem(
+		settingKeys.onAccentColor,
+		(onAccentColor = "var(--text)")
+	);
+}
+
+updateAccentColor(accentColor);
+updateOnAccentColor(onAccentColor);

@@ -15,7 +15,12 @@
 		<style>
 			#settings-form ul {
 				list-style-type: none;
+				margin: 0px;
 				padding-left: 15px;
+			}
+
+			#settings-form > ul > li {
+				margin-top: 10px;
 			}
 
 			#settings-form > ul > li > h2 {
@@ -28,22 +33,30 @@
 			}
 
 			.setting-name {
+				flex-grow: 1;
 				font-size: 1.2em;
-				width: 100%;
+			}
+
+			.setting-name + input[type="file"] {
+				display: none;
+			}
+
+			.setting-name + input[type="file"] + label {
+				padding: 5px;
+				border-radius: 5px;
+				background-color: var(--base);
+			}
+
+			.setting-name + input[type="file"] + label:hover {
+				background-color: var(--surface0);
+				cursor: pointer;
 			}
 
 			input[type="color"] {
 				width: 70px;
 				height: 35px;
-				background-color: var(--base);
-				border-width: 0px;
 				border-radius: 2px;
 				cursor: pointer;
-				padding: 4px;
-			}
-
-			input[type="color"]:hover {
-				background-color: var(--surface0);
 			}
 		</style>
 		<!-- JS -->
@@ -57,9 +70,23 @@
 			</div>
 			<ul>
 				<li>
-					<h2>Display</h2>
+					<h2>Profile</h2>
+					<ul>
+						<li>
+							<span class="setting-name">Username</span
+							><input name="username" />
+						</li>
+						<li>
+							<span class="setting-name">Password</span
+							><input
+								name="password"
+								type="password"
+							/>
+						</li>
+					</ul>
 				</li>
 				<li>
+					<h2>Display</h2>
 					<ul>
 						<li>
 							<span class="setting-name">Accent Color</span
@@ -68,29 +95,56 @@
 								type="color"
 							/>
 						</li>
+						<li>
+							<span class="setting-name">Wallpaper</span
+							><input
+								id="wallpaper-input"
+								name="wallpaper"
+								type="file"
+							/>
+							<label for="wallpaper-input"> No wallpaper </label>
+						</li>
 					</ul>
 				</li>
 			</ul>
 		</form>
 		<script>
-			const form = document.forms.namedItem("settings-form");
-			const accentColor = form.elements.namedItem("accent-color");
+			class Settings {
+				constructor() {}
+			}
 
-			accentColor.value =
-				document.documentElement.style.getPropertyValue(
-					"--accent-color"
-				);
+			const form = document.forms.namedItem("settings-form");
+
+			for (const key in settingKeys) {
+				const settingKey = settingKeys[key];
+
+				const formElement = form.elements.namedItem(settingKey);
+
+				if (!formElement) {
+					continue;
+				}
+
+				formElement.value = localStorage.getItem(settingKey);
+			}
 
 			form.addEventListener("submit", (event) => {
-				const value = accentColor.value;
-
-				localStorage.setItem(settingKeys.accentColor, value);
-				localStorage.setItem(
-					settingKeys.onAccentColor,
-					`var(${
-						chroma(value).luminance() > 0.5 ? "--crust" : "--text"
-					})`
-				);
+				for (const element of form.elements) {
+					switch (element.name) {
+						case settingKeys.accentColor: {
+							localStorage.setItem(
+								settingKeys.onAccentColor,
+								`var(${
+									chroma(element.value).luminance() > 0.5
+										? "--crust"
+										: "--text"
+								})`
+							);
+						}
+						default: {
+							localStorage.setItem(element.name, element.value);
+						}
+					}
+				}
 			});
 		</script>
 	</body>
