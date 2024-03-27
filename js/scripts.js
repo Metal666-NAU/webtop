@@ -251,7 +251,6 @@ function runApp(app) {
 		draggedWindow = windowFrame;
 		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
 
-		toggleStartMenu(false);
 		moveWindowToTop();
 	});
 
@@ -262,7 +261,6 @@ function runApp(app) {
 		setGlobalCursor(
 			`${resizedWindow.resizeSide % 2 == 0 ? "ns" : "ew"}-resize`
 		);
-		toggleStartMenu(false);
 		moveWindowToTop();
 	});
 
@@ -288,6 +286,8 @@ function runApp(app) {
 
 	windowFrame.frame.style.zIndex = index;
 
+	windowFrame.frame.focus();
+
 	dispatchEvent(new CustomEvent("app-run", { detail: task }));
 }
 
@@ -308,7 +308,9 @@ function setGlobalCursor(cursor) {
 
 /** @param {boolean} force */
 function toggleStartMenu(force) {
-	startMenu.classList.toggle("open", force);
+	if (startMenu.classList.toggle("open", force)) {
+		startMenu.focus();
+	}
 }
 
 addEventListener("mousemove", (event) => {
@@ -401,6 +403,10 @@ addEventListener("mouseup", () => {
 
 		setGlobalCursor(null);
 	}
+});
+
+startMenu.addEventListener("blur", (event) => {
+	toggleStartMenu(false);
 });
 
 startButton.addEventListener("click", (event) => toggleStartMenu());
