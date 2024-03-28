@@ -319,6 +319,11 @@ function toggleStartMenu(force) {
 	}
 }
 
+/** @param {boolean} show */
+function toggleClockSeconds(show) {
+	taskbarClockSeconds.style.display = show ? "inherit" : "none";
+}
+
 username.innerText = `Welcome back, ${localStorage.getItem(
 	settingKeys.username
 )}!`;
@@ -494,6 +499,20 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 
 	setTimeout(updateClock, 1000);
 })();
+
+addEventListener("storage", (event) => {
+	switch (event.key) {
+		case settingKeys.clockShowSeconds: {
+			toggleClockSeconds(event.newValue === "true");
+
+			break;
+		}
+	}
+});
+
+toggleClockSeconds(
+	localStorage.getItem(settingKeys.clockShowSeconds) === "true"
+);
 
 setupMessageHandler(window, [
 	{

@@ -106,6 +106,18 @@
 						</li>
 					</ul>
 				</li>
+				<li>
+					<h2>Taskbar</h2>
+					<ul>
+						<li>
+							<span class="setting-name">Clock: Show seconds</span
+							><input
+								name="clock-show-seconds"
+								type="checkbox"
+							/>
+						</li>
+					</ul>
+				</li>
 			</ul>
 		</form>
 		<script>
@@ -124,12 +136,35 @@
 					continue;
 				}
 
-				formElement.value = localStorage.getItem(settingKey);
+				if (!(formElement instanceof HTMLInputElement)) {
+					continue;
+				}
+
+				switch (formElement.type) {
+					case "checkbox": {
+						formElement.checked =
+							localStorage.getItem(settingKey) === "true";
+
+						break;
+					}
+					default: {
+						formElement.value = localStorage.getItem(settingKey);
+					}
+				}
 			}
 
 			form.addEventListener("submit", (event) => {
-				for (const element of form.elements) {
+				function storeElement(element) {
+					if (element.type === "submit") {
+						return;
+					}
+
 					switch (element.name) {
+						case settingKeys.clockShowSeconds: {
+							localStorage.setItem(element.name, element.checked);
+
+							return;
+						}
 						case settingKeys.accentColor: {
 							localStorage.setItem(
 								settingKeys.onAccentColor,
@@ -139,11 +174,16 @@
 										: "--text"
 								})`
 							);
-						}
-						default: {
-							localStorage.setItem(element.name, element.value);
+
+							break;
 						}
 					}
+
+					localStorage.setItem(element.name, element.value);
+				}
+
+				for (const element of form.elements) {
+					storeElement(element);
 				}
 			});
 		</script>

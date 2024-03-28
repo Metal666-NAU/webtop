@@ -10,6 +10,7 @@ const settingKeys = {
 	accentColor: "accent-color",
 	onAccentColor: "on-accent-color",
 	wallpaper: "wallpaper",
+	clockShowSeconds: "clock-show-seconds",
 };
 
 /**
@@ -90,6 +91,12 @@ if (!onAccentColor) {
 		settingKeys.onAccentColor,
 		(onAccentColor = "var(--text)")
 	);
+}
+
+let clockShowSeconds = localStorage.getItem(settingKeys.clockShowSeconds);
+
+if (!clockShowSeconds) {
+	localStorage.setItem(settingKeys.clockShowSeconds, true);
 }
 
 updateAccentColor(accentColor);
