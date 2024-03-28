@@ -17,6 +17,8 @@
 	height: 100%;
 	color: var(--text);
 	user-select: none;
+	scrollbar-color: var(--surface1) var(--surface0);
+	scrollbar-width: thin;
 }
 
 :root,
@@ -28,6 +30,7 @@ input {
 body {
 	margin: 0px;
 	height: 100%;
+	background-color: var(--mantle);
 }
 
 button,

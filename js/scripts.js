@@ -323,16 +323,33 @@ username.innerText = `Welcome back, ${localStorage.getItem(
 	settingKeys.username
 )}!`;
 
-if (url.searchParams.has(settingKeys.password)) {
-	if (
-		url.searchParams.get(settingKeys.password) ===
-		localStorage.getItem(settingKeys.password)
-	) {
-		lockScreen.style.display = "none";
-	} else {
-		passwordError.style.display = "inherit";
+(function () {
+	const showError = () => (passwordError.style.display = "inherit");
+	const logIn = () => (lockScreen.style.display = "none");
+
+	const password = localStorage.getItem(settingKeys.password);
+	const noPassword = password === "";
+	const passwordInput = url.searchParams.get(settingKeys.password);
+	const noPasswordInput = passwordInput === null;
+
+	if (noPassword) {
+		logIn();
+
+		return;
 	}
-}
+
+	if (passwordInput === password) {
+		logIn();
+
+		return;
+	}
+
+	if (noPasswordInput) {
+		return;
+	}
+
+	showError();
+})();
 
 addEventListener("mousemove", (event) => {
 	/** @type {Vector2} */

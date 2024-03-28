@@ -79,6 +79,28 @@
 				cursor: pointer;
 			}
 
+			#entries-table > tbody > tr > td {
+				white-space: nowrap;
+			}
+
+			#file-context-menu {
+				display: none;
+				position: absolute;
+				width: 150px;
+				outline-width: 0px;
+				border-radius: 5px;
+				overflow: hidden;
+			}
+
+			#file-context-menu > button:not(:hover) {
+				background-color: var(--surface0);
+			}
+
+			#file-context-menu span {
+				font-size: 1.3em;
+			}
+
+			#drop-zone-barrier,
 			#loading-barrier {
 				position: absolute;
 				display: flex;
@@ -87,6 +109,44 @@
 				height: 100%;
 				align-items: center;
 				justify-content: center;
+			}
+
+			#drop-zone-barrier {
+				color: transparent;
+				background-color: transparent;
+				pointer-events: none;
+				transition: background-color 300ms ease-in-out;
+			}
+
+			#drop-zone-barrier > div {
+				display: flex;
+				align-items: center;
+				column-gap: 5px;
+			}
+
+			#drop-zone-barrier > div > span {
+				font-size: 1.3em;
+			}
+
+			#drop-zone-barrier.visible {
+				color: var(--on-accent-color);
+				background-color: var(--red);
+			}
+
+			#drop-zone-barrier.visible.valid {
+				background-color: var(--accent-color);
+			}
+
+			#drop-zone-barrier.valid > #invalid-drop {
+				display: none;
+			}
+
+			#drop-zone-barrier:not(.valid) > #valid-drop {
+				display: none;
+			}
+
+			#loading-barrier {
+				background-color: var(--base);
 			}
 		</style>
 		<!-- JS -->
@@ -116,10 +176,33 @@
 				<tr>
 					<th>Name</th>
 					<th>Type</th>
+					<th>Size</th>
 				</tr>
 			</thead>
 			<tbody id="entries-table-body"></tbody>
 		</table>
+		<div
+			id="file-context-menu"
+			tabindex="-1"
+		>
+			<button
+				id="delete-file-button"
+				class="negative"
+			>
+				<span class="material-symbols-outlined">delete</span>
+				<span>Delete</span>
+			</button>
+		</div>
+		<div id="drop-zone-barrier">
+			<div id="valid-drop">
+				<span class="material-symbols-outlined">upload_file</span>
+				<span>UPLOAD</span>
+			</div>
+			<div id="invalid-drop">
+				<span class="material-symbols-outlined">block</span>
+				<span>UNSUPPORTED TYPE</span>
+			</div>
+		</div>
 		<div id="loading-barrier">
 			<span>Please wait...</span>
 		</div>
@@ -137,6 +220,7 @@
 			 * @property {HTMLElement} node
 			 */
 
+			const body = document.body;
 			const directoryUpButton = document.getElementById(
 				"directory-up-button"
 			);
@@ -149,6 +233,12 @@
 			/** @type {HTMLTableSectionElement} */
 			const entriesTableBody =
 				document.getElementById("entries-table-body");
+			const fileContextMenu =
+				document.getElementById("file-context-menu");
+			const deleteFileButton =
+				document.getElementById("delete-file-button");
+			const dropZoneBarrier =
+				document.getElementById("drop-zone-barrier");
 			const loadingBarrier = document.getElementById("loading-barrier");
 			/** @type {HTMLTemplateElement} */
 			const breadcrumbTemplate = document.getElementById(
@@ -157,10 +247,51 @@
 
 			/** @type {FileSystemDirectoryHandle} */
 			let rootDirectory;
+			/** @type {FileSystemDirectoryHandle} */
 			let currentDirectory;
 
+			/** @param {boolean} show */
 			function showLoadingBarrier(show) {
 				loadingBarrier.style.display = show ? "inherit" : "none";
+			}
+
+			/**
+			 * @param {boolean} force
+			 * @param {boolean} valid
+			 * */
+			function toggleDropZoneBarrier(force, valid) {
+				dropZoneBarrier.classList.toggle("visible", force);
+				dropZoneBarrier.classList.toggle("valid", valid);
+			}
+
+			/**
+			 * @param {boolean} show
+			 * @param {Vector2} position
+			 * @param {string} fileName
+			 * */
+			function showFileContextMenu(show, position, fileName) {
+				fileContextMenu.style.display = show ? "inherit" : "none";
+
+				if (show) {
+					fileContextMenu.focus();
+				}
+
+				if (!position) {
+					return;
+				}
+
+				fileContextMenu.style.left = `${position.x}px`;
+				fileContextMenu.style.top = `${position.y}px`;
+
+				deleteFileButton.onclick = async (event) => {
+					await currentDirectory.removeEntry(fileName, {
+						recursive: true,
+					});
+
+					showFileContextMenu(false);
+
+					await navigate();
+				};
 			}
 
 			/** @param {string} path */
@@ -220,21 +351,103 @@
 
 				entriesTableBody.replaceChildren([]);
 
-				for await (const [key, value] of currentDirectory.entries()) {
+				// In order to sort files/folders we first need to add them to a normal array...
+				const entries = [];
+
+				// ...(there is no way to sort an AsyncIterable is seems)...
+				for await (const entry of currentDirectory.values()) {
+					entries.push(entry);
+				}
+
+				// ...and then sort,
+				for (const entry of entries.sort((a, b) => {
+					// ...first by file type (dirs > files)...
+					if (a.kind !== b.kind) {
+						return a.kind > b.kind ? 1 : -1;
+					}
+
+					if (a.name === b.name) {
+						return 0;
+					}
+
+					// ...and then alphabetically.
+					return a.name > b.name ? 1 : -1;
+				})) {
 					const entryRow = entriesTableBody.insertRow();
 					const entryNameCell = entryRow.insertCell();
 					const entryTypeCell = entryRow.insertCell();
+					const entrySizeCell = entryRow.insertCell();
 
-					entryRow.addEventListener("click", (event) => {
-						location.hash += `/${value.name}`;
+					let iconId;
+
+					switch (entry.kind) {
+						case "directory": {
+							iconId = "folder";
+
+							entryRow.addEventListener("click", (event) => {
+								location.hash += `/${entry.name}`;
+							});
+
+							break;
+						}
+						case "file": {
+							iconId = "description";
+
+							const file =
+								await /** @type {FileSystemFileHandle} */ (
+									entry
+								).getFile();
+
+							// Adapted from https://gist.github.com/zentala/1e6f72438796d74531803cc3833c039c
+							let fileSize = "0 Bytes";
+
+							if (file.size !== 0) {
+								const k = 1024;
+								const sizes = [
+									"Bytes",
+									"KB",
+									"MB",
+									"GB",
+									"TB",
+									"PB",
+									"EB",
+									"ZB",
+									"YB",
+								];
+
+								const i = Math.floor(
+									Math.log(file.size) / Math.log(k)
+								);
+
+								fileSize = `${parseFloat(
+									(file.size / Math.pow(k, i)).toFixed(2)
+								)} ${sizes[i]}`;
+							}
+
+							entrySizeCell.innerText = fileSize;
+
+							break;
+						}
+					}
+
+					entryRow.addEventListener("contextmenu", (event) => {
+						event.preventDefault();
+
+						showFileContextMenu(
+							true,
+							{
+								x: event.clientX,
+								y: event.clientY,
+							},
+							entry.name
+						);
 					});
 
+					entryTypeCell.innerText = entry.kind;
 					entryNameCell.innerHTML = `
-					<span class="material-symbols-outlined">${
-						value.kind == "directory" ? "folder" : "description"
-					}</span>
-					<span>${value.name}</span>`;
-					entryTypeCell.innerText = value.kind;
+						<span class="material-symbols-outlined">${iconId}</span>
+						<span>${entry.name}</span>
+					`;
 				}
 
 				showLoadingBarrier(false);
@@ -263,6 +476,65 @@
 				});
 
 				await navigate();
+			});
+
+			let dragoverCosmeticTimeout;
+
+			body.addEventListener("dragover", (event) => {
+				event.preventDefault();
+
+				if (dragoverCosmeticTimeout) {
+					clearTimeout(dragoverCosmeticTimeout);
+				}
+
+				dragoverCosmeticTimeout = setTimeout(
+					() => toggleDropZoneBarrier(false),
+					100
+				);
+
+				toggleDropZoneBarrier(
+					true,
+					event.dataTransfer.types.includes("Files")
+				);
+			});
+			body.addEventListener("drop", async (event) => {
+				event.preventDefault();
+
+				const files = event.dataTransfer.files;
+
+				if (!files) {
+					return;
+				}
+
+				toggleDropZoneBarrier(false);
+				showLoadingBarrier(true);
+
+				for (const file of files) {
+					try {
+						const fileHandle = await currentDirectory.getFileHandle(
+							file.name,
+							{
+								create: true,
+							}
+						);
+
+						const writable = await fileHandle.createWritable();
+						await writable.write(await file.arrayBuffer());
+						await writable.close();
+					} catch ({ message }) {
+						alert(`Failed to upload file: ${message}`);
+					}
+				}
+
+				await navigate();
+			});
+
+			fileContextMenu.addEventListener("blur", (event) => {
+				if (fileContextMenu.contains(event.relatedTarget)) {
+					return;
+				}
+
+				showFileContextMenu(false);
 			});
 
 			navigator.storage.getDirectory().then(async (directory) => {
