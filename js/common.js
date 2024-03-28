@@ -10,6 +10,7 @@ const settingKeys = {
 	accentColor: "accent-color",
 	onAccentColor: "on-accent-color",
 	wallpaper: "wallpaper",
+	wallpaperFit: "wallpaper-fit",
 	clockShowSeconds: "clock-show-seconds",
 };
 

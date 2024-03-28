@@ -2,6 +2,8 @@ const lockScreen = document.getElementById("lock-screen");
 const username = document.getElementById("username");
 const passwordError = document.getElementById("password-error");
 const desktop = document.getElementById("desktop");
+/** @type {HTMLImageElement} */
+const desktopWallpaper = document.getElementById("desktop-wallpaper");
 const startMenu = document.getElementById("start-menu");
 /** @type {HTMLTableElement} */
 const startMenuApps = document.getElementById("start-menu-apps");
@@ -488,6 +490,67 @@ startButton.addEventListener("click", (event) => toggleStartMenu());
 	}
 })();
 
+async function loadDesktopWallpaper() {
+	const wallpaperPath = localStorage.getItem(settingKeys.wallpaper);
+
+	if (!wallpaperPath) {
+		desktopWallpaper.removeAttribute("src");
+
+		return;
+	}
+
+	if (wallpaperPath.startsWith("https:")) {
+		desktopWallpaper.src = wallpaperPath;
+	} else {
+		const wallpaperPathSegments = wallpaperPath.split("/");
+
+		const wallpaperFileName = wallpaperPathSegments.splice(
+			wallpaperPathSegments.length - 1,
+			1
+		)[0];
+
+		/** @type {FileSystemDirectoryHandle} */
+		let currentDirectory = null;
+		/** @type {FileSystemFileHandle} */
+		let wallpaperFileHandle = null;
+
+		try {
+			currentDirectory = await navigator.storage.getDirectory();
+
+			for (const wallpaperPathSegment of wallpaperPathSegments) {
+				currentDirectory = await currentDirectory.getDirectoryHandle(
+					wallpaperPathSegment
+				);
+			}
+
+			wallpaperFileHandle = await currentDirectory.getFileHandle(
+				wallpaperFileName
+			);
+		} catch (exception) {
+			console.error(`Failed to load wallpaper: ${exception}`);
+
+			return;
+		}
+
+		const wallpaperFile = await wallpaperFileHandle.getFile();
+		const wallpaperFileReader = new FileReader();
+
+		wallpaperFileReader.addEventListener("load", (event) => {
+			desktopWallpaper.src = wallpaperFileReader.result;
+		});
+
+		wallpaperFileReader.readAsDataURL(wallpaperFile);
+	}
+}
+
+/** @param {string} fit  */
+function updateDesktopWallpaperFit(fit) {
+	desktopWallpaper.style.objectFit = fit;
+}
+
+loadDesktopWallpaper();
+updateDesktopWallpaperFit(localStorage.getItem(settingKeys.wallpaperFit));
+
 (function updateClock() {
 	const padNumber = (number) => String(number).padStart(2, "0");
 
@@ -504,6 +567,16 @@ addEventListener("storage", (event) => {
 	switch (event.key) {
 		case settingKeys.clockShowSeconds: {
 			toggleClockSeconds(event.newValue === "true");
+
+			break;
+		}
+		case settingKeys.wallpaper: {
+			loadDesktopWallpaper();
+
+			break;
+		}
+		case settingKeys.wallpaperFit: {
+			updateDesktopWallpaperFit(event.newValue);
 
 			break;
 		}

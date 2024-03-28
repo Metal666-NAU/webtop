@@ -37,21 +37,6 @@
 				font-size: 1.2em;
 			}
 
-			.setting-name + input[type="file"] {
-				display: none;
-			}
-
-			.setting-name + input[type="file"] + label {
-				padding: 5px;
-				border-radius: 5px;
-				background-color: var(--base);
-			}
-
-			.setting-name + input[type="file"] + label:hover {
-				background-color: var(--surface0);
-				cursor: pointer;
-			}
-
 			input[type="color"] {
 				width: 70px;
 				height: 35px;
@@ -96,13 +81,19 @@
 							/>
 						</li>
 						<li>
-							<span class="setting-name">Wallpaper</span
+							<span class="setting-name">Wallpaper: Image</span
 							><input
-								id="wallpaper-input"
 								name="wallpaper"
-								type="file"
+								placeholder="path/to/wallpaper"
 							/>
-							<label for="wallpaper-input"> No wallpaper </label>
+						</li>
+						<li>
+							<span class="setting-name">Wallpaper: Fit</span>
+							<select name="wallpaper-fit">
+								<option value="">Fill</option>
+								<option value="cover">Cover</option>
+								<option value="contain">Contain</option>
+							</select>
 						</li>
 					</ul>
 				</li>
@@ -136,19 +127,29 @@
 					continue;
 				}
 
-				if (!(formElement instanceof HTMLInputElement)) {
-					continue;
-				}
+				const value = localStorage.getItem(settingKey);
 
-				switch (formElement.type) {
-					case "checkbox": {
-						formElement.checked =
-							localStorage.getItem(settingKey) === "true";
+				if (formElement instanceof HTMLInputElement) {
+					switch (formElement.type) {
+						case "checkbox": {
+							formElement.checked = value === "true";
 
-						break;
+							break;
+						}
+						default: {
+							formElement.value = value;
+						}
 					}
-					default: {
-						formElement.value = localStorage.getItem(settingKey);
+				}
+				if (formElement instanceof HTMLSelectElement) {
+					for (let i = 0; i < formElement.options.length; i++) {
+						const option = formElement.options.item(i);
+
+						if (option.value !== value) {
+							continue;
+						}
+
+						option.selected = true;
 					}
 				}
 			}
@@ -162,6 +163,14 @@
 					switch (element.name) {
 						case settingKeys.clockShowSeconds: {
 							localStorage.setItem(element.name, element.checked);
+
+							return;
+						}
+						case settingKeys.wallpaperFit: {
+							localStorage.setItem(
+								element.name,
+								element.selectedOptions[0].value
+							);
 
 							return;
 						}

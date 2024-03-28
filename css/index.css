@@ -48,6 +48,18 @@ body {
 	height: 100%;
 }
 
+#desktop-wallpaper {
+	display: none;
+	position: absolute;
+	width: calc(100% - var(--taskbar-width));
+	height: 100%;
+}
+
+#desktop-wallpaper[src] {
+	display: initial;
+	box-shadow: 0px 0px 10px -2px black;
+}
+
 #start-menu {
 	position: absolute;
 	display: flex;

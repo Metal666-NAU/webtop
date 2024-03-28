@@ -23,7 +23,8 @@
 
 :root,
 button,
-input {
+input,
+select {
 	font-family: "Courier New", Courier, monospace;
 }
 
@@ -34,7 +35,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
 	padding: 5px;
 	border-width: 0px;
 	color: var(--text);
@@ -42,11 +44,13 @@ input {
 }
 
 button:hover,
-input:hover {
+input:hover,
+select:hover {
 	background-color: var(--surface0);
 }
 
-input:focus {
+input:focus,
+select:focus {
 	outline-width: 0px;
 }
 
