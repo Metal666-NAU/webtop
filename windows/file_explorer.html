@@ -70,8 +70,19 @@
 				text-decoration: none;
 			}
 
+			#entries-table {
+				border-collapse: collapse;
+			}
+
 			#entries-table > thead {
 				text-align: left;
+				background-color: var(--base);
+			}
+
+			#entries-table th:not(:first-child, :last-child),
+			#entries-table td:not(:first-child, :last-child) {
+				border-left: 1px solid var(--surface0);
+				border-right: 1px solid var(--surface0);
 			}
 
 			#entries-table > tbody > tr:hover {
@@ -83,17 +94,25 @@
 				white-space: nowrap;
 			}
 
+			#entries-table th,
+			#entries-table td {
+				padding-left: 5px;
+				padding-right: 20px;
+			}
+
 			#file-context-menu {
-				display: none;
+				display: flex;
+				flex-direction: column;
 				position: absolute;
 				width: 150px;
+				visibility: hidden;
 				outline-width: 0px;
 				border-radius: 5px;
 				overflow: hidden;
 			}
 
-			#file-context-menu > button:not(:hover) {
-				background-color: var(--surface0);
+			#file-context-menu.visible {
+				visibility: visible;
 			}
 
 			#file-context-menu span {
@@ -115,7 +134,7 @@
 				color: transparent;
 				background-color: transparent;
 				pointer-events: none;
-				transition: background-color 300ms ease-in-out;
+				transition: none;
 			}
 
 			#drop-zone-barrier > div {
@@ -131,6 +150,8 @@
 			#drop-zone-barrier.visible {
 				color: var(--on-accent-color);
 				background-color: var(--red);
+				transition: color 300ms ease-in,
+					background-color 300ms ease-in-out;
 			}
 
 			#drop-zone-barrier.visible.valid {
@@ -166,9 +187,8 @@
 		</div>
 		<table id="entries-table">
 			<colgroup>
-				<col span="1" />
 				<col
-					span="1"
+					span="3"
 					width="0"
 				/>
 			</colgroup>
@@ -177,6 +197,7 @@
 					<th>Name</th>
 					<th>Type</th>
 					<th>Size</th>
+					<th>Last Modified</th>
 				</tr>
 			</thead>
 			<tbody id="entries-table-body"></tbody>
@@ -270,7 +291,7 @@
 			 * @param {string} fileName
 			 * */
 			function showFileContextMenu(show, position, fileName) {
-				fileContextMenu.style.display = show ? "inherit" : "none";
+				fileContextMenu.classList.toggle("visible", show);
 
 				if (show) {
 					fileContextMenu.focus();
@@ -377,6 +398,7 @@
 					const entryNameCell = entryRow.insertCell();
 					const entryTypeCell = entryRow.insertCell();
 					const entrySizeCell = entryRow.insertCell();
+					const entryLastModifiedCell = entryRow.insertCell();
 
 					let iconId;
 
@@ -425,6 +447,8 @@
 							}
 
 							entrySizeCell.innerText = fileSize;
+							entryLastModifiedCell.innerText =
+								new Date().toLocaleString();
 
 							break;
 						}
@@ -509,6 +533,9 @@
 				toggleDropZoneBarrier(false);
 				showLoadingBarrier(true);
 
+				/** @type {Array<string>} */
+				const failedFiles = [];
+
 				for (const file of files) {
 					try {
 						const fileHandle = await currentDirectory.getFileHandle(
@@ -521,12 +548,21 @@
 						const writable = await fileHandle.createWritable();
 						await writable.write(await file.arrayBuffer());
 						await writable.close();
-					} catch ({ message }) {
-						alert(`Failed to upload file: ${message}`);
+					} catch {
+						failedFiles.push(file.name);
 					}
 				}
 
 				await navigate();
+
+				if (failedFiles.length !== 0) {
+					alert(
+						`Some files failed to upload:\n${failedFiles.reduce(
+							(previousValue, currentValue) =>
+								`- ${currentValue}\n${previousValue}`
+						)}`
+					);
+				}
 			});
 
 			fileContextMenu.addEventListener("blur", (event) => {

@@ -210,6 +210,11 @@ const apps = [
 		name: "File Explorer",
 		icon_id: "inventory_2",
 	},
+	{
+		id: "notepad",
+		name: "Notepad",
+		icon_id: "contract_edit",
+	},
 ];
 
 /**
