@@ -553,8 +553,14 @@ function updateDesktopWallpaperFit(fit) {
 	desktopWallpaper.style.objectFit = fit;
 }
 
+/** @param {string} width  */
+function updateTaskbarWidth(width) {
+	document.documentElement.style.setProperty("--taskbar-width", `${width}px`);
+}
+
 loadDesktopWallpaper();
 updateDesktopWallpaperFit(localStorage.getItem(settingKeys.wallpaperFit));
+updateTaskbarWidth(localStorage.getItem(settingKeys.taskbarWidth));
 
 (function updateClock() {
 	const padNumber = (number) => String(number).padStart(2, "0");
@@ -582,6 +588,11 @@ addEventListener("storage", (event) => {
 		}
 		case settingKeys.wallpaperFit: {
 			updateDesktopWallpaperFit(event.newValue);
+
+			break;
+		}
+		case settingKeys.taskbarWidth: {
+			updateTaskbarWidth(event.newValue);
 
 			break;
 		}

@@ -11,6 +11,7 @@ const settingKeys = {
 	onAccentColor: "on-accent-color",
 	wallpaper: "wallpaper",
 	wallpaperFit: "wallpaper-fit",
+	taskbarWidth: "taskbar-width",
 	clockShowSeconds: "clock-show-seconds",
 };
 
@@ -92,6 +93,12 @@ if (!onAccentColor) {
 		settingKeys.onAccentColor,
 		(onAccentColor = "var(--text)")
 	);
+}
+
+let taskbarWidth = localStorage.getItem(settingKeys.taskbarWidth);
+
+if (!taskbarWidth) {
+	localStorage.setItem(settingKeys.taskbarWidth, 60);
 }
 
 let clockShowSeconds = localStorage.getItem(settingKeys.clockShowSeconds);
