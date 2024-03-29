@@ -234,8 +234,11 @@ let resizedWindow = null;
 
 const url = new URL(location);
 
-/** @param {App} app  */
-function runApp(app) {
+/**
+ * @param {App | string} app
+ * @param {Array} args
+ * */
+function runApp(app, args) {
 	function moveWindowToTop() {
 		const topZIndex = tasks.length - 1;
 		const currentZIndex = +windowFrame.frame.style.zIndex;
@@ -252,6 +255,20 @@ function runApp(app) {
 		});
 
 		windowFrame.frame.style.zIndex = topZIndex;
+	}
+
+	const appId = app;
+
+	if (typeof app === "string") {
+		app = apps.find((app) => app.id === appId);
+	} else {
+		appId == app.id;
+	}
+
+	if (!app) {
+		alert(`Failed to launch app: App with id '${appId}' was not found!`);
+
+		return;
 	}
 
 	const windowFrame = new WindowFrame(app);
@@ -286,10 +303,13 @@ function runApp(app) {
 
 	const index = tasks.push(task) - 1;
 
+	args ??= [];
+	args.unshift(index);
+
 	windowFrame.content.addEventListener("load", (event) => {
 		windowFrame.content.contentWindow.postMessage({
-			action: "set-index",
-			index: index,
+			action: "args",
+			args: args,
 		});
 	});
 
@@ -507,33 +527,9 @@ async function loadDesktopWallpaper() {
 	if (wallpaperPath.startsWith("https:")) {
 		desktopWallpaper.src = wallpaperPath;
 	} else {
-		const wallpaperPathSegments = wallpaperPath.split("/");
+		const wallpaperFileHandle = await loadFile(wallpaperPath);
 
-		const wallpaperFileName = wallpaperPathSegments.splice(
-			wallpaperPathSegments.length - 1,
-			1
-		)[0];
-
-		/** @type {FileSystemDirectoryHandle} */
-		let currentDirectory = null;
-		/** @type {FileSystemFileHandle} */
-		let wallpaperFileHandle = null;
-
-		try {
-			currentDirectory = await navigator.storage.getDirectory();
-
-			for (const wallpaperPathSegment of wallpaperPathSegments) {
-				currentDirectory = await currentDirectory.getDirectoryHandle(
-					wallpaperPathSegment
-				);
-			}
-
-			wallpaperFileHandle = await currentDirectory.getFileHandle(
-				wallpaperFileName
-			);
-		} catch (exception) {
-			console.error(`Failed to load wallpaper: ${exception}`);
-
+		if (!wallpaperFileHandle) {
 			return;
 		}
 
@@ -604,6 +600,12 @@ toggleClockSeconds(
 );
 
 setupMessageHandler(window, [
+	{
+		action: "run-app",
+		handler: (data) => {
+			runApp(data.id, data.args);
+		},
+	},
 	{
 		action: "kill-app",
 		handler: (data) => {

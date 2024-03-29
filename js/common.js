@@ -45,6 +45,39 @@ function setupMessageHandler(window, handlers) {
 	});
 }
 
+/**
+ * @param {string} path
+ * @returns {Promise<FileSystemFileHandle | null>}
+ * */
+async function loadFile(path) {
+	const pathSegments = path.split("/");
+
+	const fileName = pathSegments.splice(pathSegments.length - 1, 1)[0];
+
+	/** @type {FileSystemDirectoryHandle} */
+	let currentDirectory = null;
+	/** @type {FileSystemFileHandle} */
+	let fileHandle = null;
+
+	try {
+		currentDirectory = await navigator.storage.getDirectory();
+
+		for (const pathSegment of pathSegments) {
+			currentDirectory = await currentDirectory.getDirectoryHandle(
+				pathSegment
+			);
+		}
+
+		fileHandle = await currentDirectory.getFileHandle(fileName);
+	} catch (exception) {
+		console.error(`Failed to load file: ${exception}`);
+
+		return null;
+	}
+
+	return fileHandle;
+}
+
 /** @type {string} */
 function updateAccentColor(accentColor) {
 	document.documentElement.style.setProperty("--accent-color", accentColor);

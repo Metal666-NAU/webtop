@@ -450,6 +450,18 @@
 							entryLastModifiedCell.innerText =
 								new Date().toLocaleString();
 
+							entryRow.addEventListener("click", (event) => {
+								parent.postMessage({
+									action: "run-app",
+									id: "notepad",
+									args: [
+										`${location.hash.replace("#", "")}/${
+											entry.name
+										}`,
+									],
+								});
+							});
+
 							break;
 						}
 					}

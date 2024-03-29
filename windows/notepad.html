@@ -12,8 +12,61 @@
 			rel="stylesheet"
 			href="/css/common.css"
 		/>
+		<style>
+			#notepad-form {
+				height: 100%;
+			}
+
+			#text-area {
+				width: 100%;
+				height: 100%;
+				resize: none;
+				border: 0px;
+				padding: 0px;
+			}
+		</style>
 		<!-- JS -->
 		<script src="/js/common.js"></script>
 	</head>
-	<body></body>
+	<body>
+		<form id="notepad-form">
+			<textarea id="text-area"></textarea>
+		</form>
+		<!-- Scripts -->
+		<script>
+			/** @type {HTMLTextAreaElement} */
+			const textArea = document.getElementById("text-area");
+
+			setupMessageHandler(window, [
+				{
+					action: "args",
+					handler: async (data) => {
+						if (data.args.length <= 1) {
+							return;
+						}
+
+						const filePath = data.args[1];
+						/** @type {FileSystemFileHandle | null} */
+						const fileHandle = await loadFile(filePath);
+
+						if (!fileHandle) {
+							return;
+						}
+
+						const file = await fileHandle.getFile();
+
+						if (!file.type.startsWith("text/")) {
+							alert(
+								`Failed to load file: type ${file.type} is not supported!`
+							);
+
+							return;
+						}
+
+						textArea.value = await file.text();
+					},
+				},
+			]);
+		</script>
+	</body>
 </html>
