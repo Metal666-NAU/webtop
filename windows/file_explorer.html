@@ -457,7 +457,7 @@
 									args: [
 										`${location.hash.replace("#", "")}/${
 											entry.name
-										}`,
+										}`.replace(/^\//, ""),
 									],
 								});
 							});

@@ -13,29 +13,106 @@
 			href="/css/common.css"
 		/>
 		<style>
-			#notepad-form {
+			body {
+				display: flex;
+				flex-direction: column;
 				height: 100%;
 			}
 
+			#main-panel {
+				display: flex;
+				flex-grow: 1;
+			}
+
+			#controls {
+				display: flex;
+				flex-direction: column;
+				border-right: 1px solid var(--surface0);
+				background-color: var(--base);
+			}
+
+			#controls > button > span {
+				font-size: 28px;
+			}
+
+			#save-file-button.unsaved-changes {
+				color: var(--on-accent-color);
+				background-color: var(--accent-color);
+			}
+
 			#text-area {
-				width: 100%;
-				height: 100%;
+				box-sizing: border-box;
+				flex-grow: 1;
+				font-size: 1.2em;
 				resize: none;
-				border: 0px;
-				padding: 0px;
+				padding: 5px;
+				white-space: pre;
+				overflow-wrap: normal;
+				overflow-x: auto;
+				background-color: var(--mantle);
 			}
 		</style>
 		<!-- JS -->
 		<script src="/js/common.js"></script>
 	</head>
 	<body>
-		<form id="notepad-form">
-			<textarea id="text-area"></textarea>
-		</form>
+		<input
+			id="file-name-input"
+			placeholder="path/to/file"
+		/>
+		<div id="main-panel">
+			<div id="controls">
+				<button
+					id="save-file-button"
+					disabled
+				>
+					<span class="material-symbols-outlined">save</span>
+				</button>
+			</div>
+			<textarea
+				id="text-area"
+				spellcheck="false"
+			></textarea>
+		</div>
 		<!-- Scripts -->
 		<script>
+			/** @type {HTMLInputElement} */
+			const fileNameInput = document.getElementById("file-name-input");
+			/** @type {HTMLButtonElement} */
+			const saveFileButton = document.getElementById("save-file-button");
 			/** @type {HTMLTextAreaElement} */
 			const textArea = document.getElementById("text-area");
+
+			/** @param {boolean} force */
+			function toggleSaveFileButtonHighlight(force) {
+				saveFileButton.classList.toggle("unsaved-changes", force);
+			}
+
+			fileNameInput.addEventListener("change", (event) => {
+				saveFileButton.disabled = !fileNameInput.value;
+			});
+			saveFileButton.addEventListener("click", async (event) => {
+				const content = textArea.value;
+
+				/** @type {FileSystemFileHandle | null} */
+				const fileHandle = await loadFile(fileNameInput.value, true);
+
+				if (!fileHandle) {
+					alert("Failed to save file!");
+
+					return;
+				}
+
+				const writable = await fileHandle.createWritable();
+				await writable.write(content);
+
+				await writable.close();
+
+				toggleSaveFileButtonHighlight(false);
+			});
+			textArea.addEventListener("input", (event) => {
+				toggleSaveFileButtonHighlight(true);
+			});
 
 			setupMessageHandler(window, [
 				{
@@ -46,6 +123,12 @@
 						}
 
 						const filePath = data.args[1];
+
+						if (filePath) {
+							fileNameInput.value = filePath;
+							saveFileButton.disabled = false;
+						}
+
 						/** @type {FileSystemFileHandle | null} */
 						const fileHandle = await loadFile(filePath);
 
@@ -54,14 +137,6 @@
 						}
 
 						const file = await fileHandle.getFile();
-
-						if (!file.type.startsWith("text/")) {
-							alert(
-								`Failed to load file: type ${file.type} is not supported!`
-							);
-
-							return;
-						}
 
 						textArea.value = await file.text();
 					},

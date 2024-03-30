@@ -24,7 +24,8 @@
 :root,
 button,
 input,
-select {
+select,
+textarea {
 	font-family: "Courier New", Courier, monospace;
 }
 
@@ -36,7 +37,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
 	padding: 5px;
 	border-width: 0px;
 	color: var(--text);
@@ -49,8 +51,16 @@ select:hover {
 	background-color: var(--surface0);
 }
 
+button:disabled,
+input:disabled,
+select:disabled {
+	color: var(--overlay0);
+	background-color: inherit;
+}
+
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
 	outline-width: 0px;
 }
 

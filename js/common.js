@@ -49,7 +49,7 @@ function setupMessageHandler(window, handlers) {
  * @param {string} path
  * @returns {Promise<FileSystemFileHandle | null>}
  * */
-async function loadFile(path) {
+async function loadFile(path, create) {
 	const pathSegments = path.split("/");
 
 	const fileName = pathSegments.splice(pathSegments.length - 1, 1)[0];
@@ -68,7 +68,9 @@ async function loadFile(path) {
 			);
 		}
 
-		fileHandle = await currentDirectory.getFileHandle(fileName);
+		fileHandle = await currentDirectory.getFileHandle(fileName, {
+			create: create,
+		});
 	} catch (exception) {
 		console.error(`Failed to load file: ${exception}`);
 

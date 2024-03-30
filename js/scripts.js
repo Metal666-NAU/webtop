@@ -164,6 +164,7 @@ class TaskbarIcon {
 		icon.innerText = app.icon_id;
 
 		this.documentFragment = documentFragment;
+		/** @type {HTMLButtonElement} */
 		this.container = documentFragment.querySelector(
 			".taskbar-icon-container"
 		);
@@ -224,8 +225,8 @@ const apps = [
  * @property {App} app
  */
 
-/** @type {Array<Task>} */
-this.tasks = [];
+/** @type {Map<string, Task>} */
+this.tasks = new Map();
 
 /** @type {WindowFrame} */
 let draggedWindow = null;
@@ -239,24 +240,6 @@ const url = new URL(location);
  * @param {Array} args
  * */
 function runApp(app, args) {
-	function moveWindowToTop() {
-		const topZIndex = tasks.length - 1;
-		const currentZIndex = +windowFrame.frame.style.zIndex;
-
-		tasks.forEach((task) => {
-			const frame = task.window.frame;
-			const zIndex = +frame.style.zIndex;
-
-			if (zIndex <= currentZIndex) {
-				return;
-			}
-
-			frame.style.zIndex = zIndex - 1;
-		});
-
-		windowFrame.frame.style.zIndex = topZIndex;
-	}
-
 	const appId = app;
 
 	if (typeof app === "string") {
@@ -277,23 +260,6 @@ function runApp(app, args) {
 	windowsContainer.appendChild(windowFrame.documentFragment);
 	taskbarIconsContainer.appendChild(taskbarIcon.documentFragment);
 
-	windowFrame.titlebar.addEventListener("mousedown", (event) => {
-		draggedWindow = windowFrame;
-		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
-
-		moveWindowToTop();
-	});
-
-	windowFrame.border.addEventListener("mousedown", (event) => {
-		resizedWindow = windowFrame;
-		resizedWindow.startResize({ x: event.offsetX, y: event.offsetY });
-
-		setGlobalCursor(
-			`${resizedWindow.resizeSide % 2 == 0 ? "ns" : "ew"}-resize`
-		);
-		moveWindowToTop();
-	});
-
 	/** @type {Task} */
 	const task = {
 		window: windowFrame,
@@ -301,10 +267,30 @@ function runApp(app, args) {
 		app: app,
 	};
 
-	const index = tasks.push(task) - 1;
+	windowFrame.titlebar.addEventListener("mousedown", (event) => {
+		draggedWindow = windowFrame;
+		draggedWindow.startDrag({ x: event.offsetX, y: event.offsetY });
+
+		moveWindowToTop(task);
+	});
+	windowFrame.border.addEventListener("mousedown", (event) => {
+		resizedWindow = windowFrame;
+		resizedWindow.startResize({ x: event.offsetX, y: event.offsetY });
+
+		setGlobalCursor(
+			`${resizedWindow.resizeSide % 2 == 0 ? "ns" : "ew"}-resize`
+		);
+		moveWindowToTop(task);
+	});
+	taskbarIcon.container.addEventListener("click", (event) => {
+		moveWindowToTop(task);
+	});
+
+	const id = crypto.randomUUID();
+	tasks.set(id, task);
 
 	args ??= [];
-	args.unshift(index);
+	args.unshift(id);
 
 	windowFrame.content.addEventListener("load", (event) => {
 		windowFrame.content.contentWindow.postMessage({
@@ -313,25 +299,55 @@ function runApp(app, args) {
 		});
 	});
 
-	windowFrame.closeButton.addEventListener("click", (event) =>
-		stopApp(index)
-	);
+	windowFrame.closeButton.addEventListener("click", (event) => stopApp(id));
 
-	windowFrame.frame.style.zIndex = index;
+	windowFrame.frame.style.zIndex = tasks.size - 1;
 
 	windowFrame.frame.focus();
 
-	dispatchEvent(new CustomEvent("app-run", { detail: task }));
+	sendTasks();
 }
 
-/** @param {number} index */
-function stopApp(index) {
-	const task = tasks.splice(index, 1)[0];
+/** @param {string} id */
+function stopApp(id) {
+	const task = tasks.get(id);
+
+	if (!task) {
+		alert(`Failed to stop task: Task with id '${id}' was not found!`);
+
+		return;
+	}
+
+	tasks.delete(id);
 
 	windowsContainer.removeChild(task.window.frame);
 	taskbarIconsContainer.removeChild(task.icon.container);
 
-	dispatchEvent(new CustomEvent("app-stopped", { detail: index }));
+	sendTasks();
+}
+
+function sendTasks() {
+	dispatchEvent(new CustomEvent("tasks", { detail: tasks }));
+}
+
+/** @param {Task} task  */
+function moveWindowToTop(task) {
+	const windowFrame = task.window;
+	const topZIndex = tasks.size - 1;
+	const currentZIndex = +windowFrame.frame.style.zIndex;
+
+	for (const task of tasks.values()) {
+		const frame = task.window.frame;
+		const zIndex = +frame.style.zIndex;
+
+		if (zIndex <= currentZIndex) {
+			continue;
+		}
+
+		frame.style.zIndex = zIndex - 1;
+	}
+
+	windowFrame.frame.style.zIndex = topZIndex;
 }
 
 /** @param {string} cursor */
@@ -601,15 +617,19 @@ toggleClockSeconds(
 
 setupMessageHandler(window, [
 	{
+		action: "resend-tasks",
+		handler: sendTasks,
+	},
+	{
 		action: "run-app",
 		handler: (data) => {
 			runApp(data.id, data.args);
 		},
 	},
 	{
-		action: "kill-app",
+		action: "stop-app",
 		handler: (data) => {
-			stopApp(data.index);
+			stopApp(data.id);
 		},
 	},
 ]);

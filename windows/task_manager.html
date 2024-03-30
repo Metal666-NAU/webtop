@@ -66,45 +66,43 @@
 			/** @type {HTMLTableSectionElement} */
 			const tasksTableBody = tasksTable.createTBody();
 
-			function addTask(task) {
-				const taskRow = tasksTableBody.insertRow();
-				const taskNameCell = taskRow.insertCell();
+			parent.addEventListener("tasks", (event) => {
+				tasksTableBody.replaceChildren([]);
 
-				taskNameCell.innerText = task.app.name;
+				for (const [id, task] of event.detail) {
+					const taskRow = tasksTableBody.insertRow();
+					const taskNameCell = taskRow.insertCell();
 
-				const tempCell = taskRow.insertCell();
+					taskNameCell.innerText = task.app.name;
 
-				const killTaskCell = taskRow.insertCell();
-				/** @type {HTMLButtonElement} */
-				const killTaskButton = document.createElement("button");
+					const tempCell = taskRow.insertCell();
 
-				killTaskButton.classList.add("kill-task-button", "negative");
-				killTaskButton.innerHTML = `
-					<span>Kill</span>
-					<span class="material-symbols-outlined">close</span>
-				`;
-				killTaskButton.addEventListener("click", (event) => {
-					parent.postMessage({
-						action: "kill-app",
-						index: parent.tasks.indexOf(task),
+					const killTaskCell = taskRow.insertCell();
+					/** @type {HTMLButtonElement} */
+					const killTaskButton = document.createElement("button");
+
+					killTaskButton.classList.add(
+						"kill-task-button",
+						"negative"
+					);
+					killTaskButton.innerHTML = `
+						<span>Kill</span>
+						<span class="material-symbols-outlined">close</span>
+					`;
+					killTaskButton.addEventListener("click", (event) => {
+						parent.postMessage({
+							action: "stop-app",
+							id: id,
+						});
 					});
-				});
 
-				killTaskCell.appendChild(killTaskButton);
-			}
+					killTaskCell.appendChild(killTaskButton);
+				}
+			});
 
-			function removeTask(index) {
-				tasksTableBody.deleteRow(index);
-			}
-
-			parent.addEventListener("app-run", (event) =>
-				addTask(event.detail)
-			);
-			parent.addEventListener("app-stopped", (event) =>
-				removeTask(event.detail)
-			);
-
-			parent.tasks.forEach(addTask);
+			parent.postMessage({
+				action: "resend-tasks",
+			});
 		</script>
 	</body>
 </html>
