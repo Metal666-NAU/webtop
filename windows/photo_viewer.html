@@ -12,8 +12,133 @@
 			rel="stylesheet"
 			href="/css/common.css"
 		/>
+		<style>
+			body {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			#image-file-name {
+				margin: 5px;
+				font-size: 1.2em;
+				color: var(--subtext0);
+			}
+
+			#image-container {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-grow: 1;
+				box-sizing: border-box;
+				min-height: 0px;
+				padding: 20px;
+				padding-top: 0px;
+			}
+
+			#image {
+				max-width: 100%;
+				max-height: 100%;
+				box-shadow: 0px 0px 10px -3px black;
+			}
+		</style>
 		<!-- JS -->
 		<script src="/js/common.js"></script>
 	</head>
-	<body></body>
+	<body>
+		<span id="image-file-name"></span>
+		<div id="image-container">
+			<img id="image" />
+		</div>
+		<!-- Scripts -->
+		<script>
+			const imageFileName = document.getElementById("image-file-name");
+			/** @type {HTMLImageElement} */
+			const image = document.getElementById("image");
+
+			/** @type {FileSystemDirectoryHandle} */
+			let currentDirectory;
+
+			/** @param {string} fileName  */
+			async function loadPhoto(fileName) {
+				/** @type {FileSystemFileHandle | null} */
+				const fileHandle = await currentDirectory.getFileHandle(
+					fileName
+				);
+
+				if (!fileHandle) {
+					alert("Failed to load photo!");
+
+					return;
+				}
+
+				const file = await fileHandle.getFile();
+
+				if (!file.type.startsWith("image/")) {
+					alert("Failed to load photo: file is not an image!");
+
+					return;
+				}
+
+				const fileReader = new FileReader();
+
+				fileReader.addEventListener("load", (event) => {
+					image.src = fileReader.result;
+				});
+
+				fileReader.readAsDataURL(file);
+
+				imageFileName.innerText = fileName;
+			}
+
+			setupMessageHandler(window, [
+				{
+					action: "args",
+					handler: async (data) => {
+						/** @type {string}*/
+						let filePath;
+
+						if (data.args.length <= 1) {
+							filePath = prompt(
+								"Which file do you want ot open?"
+							);
+
+							if (!filePath) {
+								parent.postMessage({
+									action: "stop-app",
+									id: data.args[0],
+								});
+
+								return;
+							}
+						} else {
+							filePath = data.args[1];
+						}
+
+						const { directoryPath, fileName } = {
+							...splitFilePath(filePath),
+						};
+
+						if (!fileName) {
+							alert("Failed to load photo: invalid path!");
+
+							return;
+						}
+
+						currentDirectory = await openDirectory(directoryPath);
+
+						if (!currentDirectory) {
+							alert(
+								`Failed to load photo: failed to open directory '${directoryPath}'!`
+							);
+
+							return;
+						}
+
+						await loadPhoto(fileName);
+					},
+				},
+			]);
+		</script>
+	</body>
 </html>

@@ -47,17 +47,15 @@ function setupMessageHandler(window, handlers) {
 
 /**
  * @param {string} path
- * @returns {Promise<FileSystemFileHandle | null>}
- * */
-async function loadFile(path, create) {
-	const pathSegments = path.split("/");
+ * @returns {Promise<FileSystemDirectoryHandle | null>}
+ */
+async function openDirectory(path) {
+	path = path.replace(/^\//, "");
 
-	const fileName = pathSegments.splice(pathSegments.length - 1, 1)[0];
+	const pathSegments = path.split("/");
 
 	/** @type {FileSystemDirectoryHandle} */
 	let currentDirectory = null;
-	/** @type {FileSystemFileHandle} */
-	let fileHandle = null;
 
 	try {
 		currentDirectory = await navigator.storage.getDirectory();
@@ -67,17 +65,56 @@ async function loadFile(path, create) {
 				pathSegment
 			);
 		}
-
-		fileHandle = await currentDirectory.getFileHandle(fileName, {
-			create: create,
-		});
 	} catch (exception) {
-		console.error(`Failed to load file: ${exception}`);
+		console.error(`Failed to open folder: ${exception.message}`);
 
 		return null;
 	}
 
-	return fileHandle;
+	return currentDirectory;
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<FileSystemFileHandle | null>}
+ */
+async function loadFile(path, create) {
+	console.log(`Loading file @ '${path}' (create: ${create}).`);
+
+	path = path.replace(/^\//, "");
+
+	const filePath = splitFilePath(path);
+
+	const directory = await (filePath.directoryPath
+		? await openDirectory(filePath.directoryPath)
+		: navigator.storage.getDirectory());
+
+	if (!directory) {
+		return null;
+	}
+
+	try {
+		return await directory.getFileHandle(filePath.fileName, {
+			create: create,
+		});
+	} catch (exception) {
+		console.error(`Failed to load file: ${exception.message}`);
+
+		return null;
+	}
+}
+
+/**
+ * @param {string} path
+ * @returns {{directoryPath: string, fileName: string}}
+ */
+function splitFilePath(path) {
+	const fileAndDirectorySeparatorIndex = path.lastIndexOf("/");
+
+	return {
+		directoryPath: path.substring(0, fileAndDirectorySeparatorIndex),
+		fileName: path.substring(fileAndDirectorySeparatorIndex + 1),
+	};
 }
 
 /** @type {string} */

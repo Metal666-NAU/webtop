@@ -453,11 +453,14 @@
 							entryRow.addEventListener("click", (event) => {
 								parent.postMessage({
 									action: "run-app",
-									id: "notepad",
+									id:
+										{ image: "photo_viewer" }[
+											file.type.split("/", 1)[0]
+										] ?? "notepad",
 									args: [
 										`${location.hash.replace("#", "")}/${
 											entry.name
-										}`.replace(/^\//, ""),
+										}`,
 									],
 								});
 							});
@@ -498,7 +501,7 @@
 			});
 
 			directoryUpButton.addEventListener("click", async (event) => {
-				location.hash = location.hash.replace(/\/?\w+\/?$/, "");
+				location.hash = location.hash.replace(/\/?[^/]+\/?$/, "");
 			});
 			createFolderButton.addEventListener("click", async (event) => {
 				const directoryName = prompt("Directory name:");
@@ -507,9 +510,15 @@
 					return;
 				}
 
-				await currentDirectory.getDirectoryHandle(directoryName, {
-					create: true,
-				});
+				try {
+					await currentDirectory.getDirectoryHandle(directoryName, {
+						create: true,
+					});
+				} catch (exception) {
+					alert(`Failed to create folder: ${exception.message}`);
+
+					return;
+				}
 
 				await navigate();
 			});
