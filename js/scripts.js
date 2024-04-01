@@ -192,13 +192,8 @@ const apps = [
 		icon_id: "browse_activity",
 	},
 	{
-		id: "music_player",
-		name: "Music Player",
-		icon_id: "speaker",
-	},
-	{
-		id: "video_player",
-		name: "Video Player",
+		id: "media_player",
+		name: "Media Player",
 		icon_id: "movie",
 	},
 	{

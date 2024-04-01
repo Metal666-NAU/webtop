@@ -454,9 +454,12 @@
 								parent.postMessage({
 									action: "run-app",
 									id:
-										{ image: "photo_viewer" }[
-											file.type.split("/", 1)[0]
-										] ?? "notepad",
+										{
+											image: "photo_viewer",
+											audio: "media_player",
+											video: "media_player",
+										}[file.type.split("/", 1)[0]] ??
+										"notepad",
 									args: [
 										`${location.hash.replace("#", "")}/${
 											entry.name
