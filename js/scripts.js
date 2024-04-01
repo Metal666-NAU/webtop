@@ -99,9 +99,7 @@ class WindowFrame {
 
 	/** @param {boolean} show */
 	showResizeOutline(show) {
-		this.frame.style.boxShadow = show
-			? "0px 0px 5px 2px var(--accent-color)"
-			: null;
+		this.frame.classList.toggle("highlight-border", show);
 	}
 
 	/**
@@ -299,6 +297,16 @@ function runApp(app, args) {
 	windowFrame.frame.style.zIndex = tasks.size - 1;
 
 	windowFrame.frame.focus();
+	windowFrame.frame.animate(
+		[
+			{
+				transform: "scale(0%)",
+				easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+			},
+			{ transform: "scale(100%)" },
+		],
+		200
+	);
 
 	sendTasks();
 }
@@ -315,8 +323,20 @@ function stopApp(id) {
 
 	tasks.delete(id);
 
-	windowsContainer.removeChild(task.window.frame);
 	taskbarIconsContainer.removeChild(task.icon.container);
+
+	task.window.frame.animate(
+		[
+			{
+				transform: "scale(100%)",
+				easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+			},
+			{ transform: "scale(0%)" },
+		],
+		200
+	).onfinish = () => {
+		windowsContainer.removeChild(task.window.frame);
+	};
 
 	sendTasks();
 }
@@ -493,7 +513,10 @@ logOutButton.addEventListener("click", (event) => {
 });
 
 startMenu.addEventListener("blur", (event) => {
-	if (startMenu.contains(event.relatedTarget)) {
+	if (
+		startMenu.contains(event.relatedTarget) ||
+		startButton.contains(event.relatedTarget)
+	) {
 		return;
 	}
 

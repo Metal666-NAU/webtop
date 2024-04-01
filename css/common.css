@@ -43,6 +43,7 @@ textarea {
 	border-width: 0px;
 	color: var(--text);
 	background-color: var(--base);
+	transition: color 100ms ease-out, background-color 100ms ease-in;
 }
 
 button:hover,
