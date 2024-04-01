@@ -41,7 +41,7 @@ class WindowFrame {
 		/** @type {HTMLIFrameElement} */
 		const content = documentFragment.querySelector(".window-content");
 
-		content.src = `/windows/${app.id}.html`;
+		content.src = `../windows/${app.id}.html`;
 		content.addEventListener("load", () => {
 			content.contentDocument.title = app.name;
 		});
