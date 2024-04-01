@@ -64,6 +64,11 @@ textarea:focus {
 	outline-width: 0px;
 }
 
+input,
+progress {
+	accent-color: var(--accent-color);
+}
+
 button > span {
 	vertical-align: middle;
 }

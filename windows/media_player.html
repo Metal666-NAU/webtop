@@ -14,45 +14,82 @@
 		/>
 		<style>
 			body {
-				display: flex;
-				flex-direction: column;
+				overflow: hidden;
 			}
 
-			#player-content {
-				display: flex;
-				flex-direction: column;
-				flex-grow: 1;
-				min-height: 0px;
+			body > div {
+				position: absolute;
 			}
 
 			#media-container {
-				flex-grow: 1;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
 				box-sizing: border-box;
 				min-height: 0px;
 			}
 
+			#media-container,
 			#media-container > video {
 				width: 100%;
 				height: 100%;
 			}
 
-			#player-controls {
+			#media-container > span {
+				text-align: center;
+				font-size: 50px;
+			}
+
+			#media-controls {
 				display: flex;
 				flex-direction: column;
-				align-items: center;
+				align-items: stretch;
 				row-gap: 5px;
-				margin: 5px;
+				width: 100%;
+				bottom: 0px;
+				padding: 5px;
+				box-sizing: border-box;
+				background-color: rgba(0, 0, 0, 0.5);
+				transform: translateY(100%);
+				transition: transform 100ms ease-in-out 500ms;
+			}
+
+			body:hover > #media-controls {
+				transform: translateY(0%);
+				transition-delay: 0ms;
+			}
+
+			#media-controls > div {
+				align-items: center;
 			}
 
 			#player-progress-panel {
 				display: flex;
-				align-self: stretch;
 				column-gap: 5px;
 			}
 
 			#player-progress {
 				flex-grow: 1;
-				accent-color: var(--accent-color);
+			}
+
+			#player-controls-panel {
+				display: flex;
+				justify-content: space-between;
+			}
+
+			#player-controls-panel > * {
+				flex-grow: 1;
+				flex-basis: 0;
+			}
+
+			#media-name {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			#player-pause-button-container {
+				text-align: center;
 			}
 
 			#player-pause-button:not(.playing) > #pause-icon {
@@ -62,16 +99,33 @@
 			#player-pause-button.playing > #play-icon {
 				display: none;
 			}
+
+			#player-colume-container {
+				display: flex;
+				justify-content: end;
+			}
+
+			#player-colume-container > div {
+				display: flex;
+				flex-direction: column;
+			}
+
+			#player-volume {
+				width: 100px;
+			}
+
+			#player-volume-label {
+				font-size: 0.9em;
+				padding: 2px;
+				width: 30px;
+			}
 		</style>
 		<!-- JS -->
 		<script src="/js/common.js"></script>
 	</head>
 	<body>
-		<div id="player-content">
-			<div id="media-container"></div>
-			<span id="media-name"></span>
-		</div>
-		<div id="player-controls">
+		<div id="media-container"></div>
+		<div id="media-controls">
 			<div id="player-progress-panel">
 				<span id="playback-time"></span>
 				<input
@@ -82,32 +136,56 @@
 					step="0.00001"
 					value="0"
 				/>
-				<span id="time-left"></span>
+				<span id="total-time"></span>
 			</div>
-			<button id="player-pause-button">
-				<span
-					id="play-icon"
-					class="material-symbols-outlined"
-					>play_arrow</span
-				>
-				<span
-					id="pause-icon"
-					class="material-symbols-outlined"
-					>pause</span
-				>
-			</button>
+			<div id="player-controls-panel">
+				<span id="media-name"></span>
+				<div id="player-pause-button-container">
+					<button id="player-pause-button">
+						<span
+							id="play-icon"
+							class="material-symbols-outlined"
+							>play_arrow</span
+						>
+						<span
+							id="pause-icon"
+							class="material-symbols-outlined"
+							>pause</span
+						>
+					</button>
+				</div>
+				<div id="player-colume-container">
+					<input
+						id="player-volume"
+						type="range"
+						min="0"
+						max="1"
+						step="0.001"
+						value="0.5"
+					/>
+					<div>
+						<span class="material-symbols-outlined">speaker</span>
+						<span id="player-volume-label">50%</span>
+					</div>
+				</div>
+			</div>
 		</div>
 		<!-- Scripts -->
 		<script>
 			const mediaContainer = document.getElementById("media-container");
-			const mediaName = document.getElementById("media-name");
 			const playbackTime = document.getElementById("playback-time");
 			/** @type {HTMLInputElement} */
 			const playerProgress = document.getElementById("player-progress");
-			const timeLeft = document.getElementById("time-left");
+			const totalTime = document.getElementById("total-time");
+			const mediaName = document.getElementById("media-name");
 			/** @type {HTMLButtonElement} */
 			const playerPauseButton = document.getElementById(
 				"player-pause-button"
+			);
+			/** @type {HTMLInputElement} */
+			const playerVolume = document.getElementById("player-volume");
+			const playerVolumeLabel = document.getElementById(
+				"player-volume-label"
 			);
 
 			/** @type {HTMLMediaElement} */
@@ -143,10 +221,29 @@
 			}
 
 			function updateProgress() {
+				// Adapted from https://stackoverflow.com/a/34841026/13027370
+				function secondsToHHMMSS(seconds) {
+					seconds = parseInt(seconds, 10);
+
+					return [
+						Math.floor(seconds / 3600),
+						Math.floor(seconds / 60) % 60,
+						seconds % 60,
+					]
+						.map((value) => String(value).padStart(2, "0"))
+						.filter((value, index) => value !== "00" || index > 0)
+						.join(":");
+				}
+
+				playbackTime.innerText = secondsToHHMMSS(media.currentTime);
 				playerProgress.value = media.currentTime / media.duration;
+				totalTime.innerText = secondsToHHMMSS(media.duration);
 			}
 
-			playerPauseButton.addEventListener("click", updatePlayState);
+			playerPauseButton.addEventListener(
+				"click",
+				async (event) => await updatePlayState()
+			);
 			playerProgress.addEventListener("input", (event) => {
 				if (!media) {
 					console.error("Failed to seek!");
@@ -155,6 +252,13 @@
 				}
 
 				media.currentTime = playerProgress.value * media.duration;
+			});
+			playerVolume.addEventListener("input", (event) => {
+				media.volume = playerVolume.value;
+
+				playerVolumeLabel.innerText = `${Math.floor(
+					playerVolume.value * 100
+				)}%`;
 			});
 
 			setupMessageHandler(window, [
@@ -213,7 +317,15 @@
 						});
 						media.addEventListener("timeupdate", updateProgress);
 
+						if (mediaType === 1) {
+							mediaContainer.innerHTML =
+								'<span class="material-symbols-outlined">music_note</span>';
+						}
+
 						mediaContainer.appendChild(media);
+
+						mediaName.innerText = fileHandle.name;
+						media.volume = 0.5;
 
 						await play();
 					},
