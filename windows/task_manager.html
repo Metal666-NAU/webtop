@@ -4,8 +4,8 @@
 		<!-- Meta -->
 		<meta charset="UTF-8" />
 		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0"
+			name="author"
+			content="Novikov"
 		/>
 		<!-- CSS -->
 		<link
@@ -68,39 +68,48 @@
 			/** @type {HTMLTableSectionElement} */
 			const tasksTableBody = tasksTable.createTBody();
 
-			parent.addEventListener("tasks", (event) => {
-				tasksTableBody.replaceChildren([]);
+			setupMessageHandler(parent, [
+				{
+					action: "tasks",
+					handler: (data) => {
+						tasksTableBody.replaceChildren([]);
 
-				for (const [id, task] of event.detail) {
-					const taskRow = tasksTableBody.insertRow();
-					const taskNameCell = taskRow.insertCell();
+						for (const [id, app] of data.tasks) {
+							const taskRow = tasksTableBody.insertRow();
+							const taskNameCell = taskRow.insertCell();
 
-					taskNameCell.innerText = task.app.name;
+							taskNameCell.innerText = app.name;
 
-					const tempCell = taskRow.insertCell();
+							const tempCell = taskRow.insertCell();
 
-					const killTaskCell = taskRow.insertCell();
-					/** @type {HTMLButtonElement} */
-					const killTaskButton = document.createElement("button");
+							const killTaskCell = taskRow.insertCell();
+							/** @type {HTMLButtonElement} */
+							const killTaskButton =
+								document.createElement("button");
 
-					killTaskButton.classList.add(
-						"kill-task-button",
-						"negative"
-					);
-					killTaskButton.innerHTML = `
-						<span>Kill</span>
-						<span class="material-symbols-outlined">close</span>
-					`;
-					killTaskButton.addEventListener("click", (event) => {
-						parent.postMessage({
-							action: "stop-app",
-							id: id,
-						});
-					});
+							killTaskButton.classList.add(
+								"kill-task-button",
+								"negative"
+							);
+							killTaskButton.innerHTML = `
+								<span>Kill</span>
+								<span class="material-symbols-outlined">close</span>
+							`;
+							killTaskButton.addEventListener(
+								"click",
+								(event) => {
+									parent.postMessage({
+										action: "stop-app",
+										id: id,
+									});
+								}
+							);
 
-					killTaskCell.appendChild(killTaskButton);
-				}
-			});
+							killTaskCell.appendChild(killTaskButton);
+						}
+					},
+				},
+			]);
 
 			parent.postMessage({
 				action: "resend-tasks",

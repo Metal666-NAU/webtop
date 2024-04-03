@@ -4,8 +4,8 @@
 		<!-- Meta -->
 		<meta charset="UTF-8" />
 		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0"
+			name="author"
+			content="Novikov"
 		/>
 		<!-- CSS -->
 		<link
@@ -13,6 +13,11 @@
 			href="../css/common.css"
 		/>
 		<style>
+			#top-panel {
+				background-color: var(--crust);
+				padding: 5px;
+			}
+
 			#settings-form ul {
 				list-style-type: none;
 				margin: 0px;
@@ -50,7 +55,7 @@
 	</head>
 	<body>
 		<form id="settings-form">
-			<div>
+			<div id="top-panel">
 				<button>Save</button>
 			</div>
 			<ul>
@@ -118,15 +123,36 @@
 						</li>
 					</ul>
 				</li>
+				<li>
+					<h2>Browser Info</h2>
+					<ul>
+						<li>
+							<span class="setting-name">Language</span
+							><span id="language"></span>
+						</li>
+						<li>
+							<span class="setting-name">App Code Name</span
+							><span id="app-code-name"></span>
+						</li>
+						<li>
+							<span class="setting-name">Vendor</span
+							><span id="vendor"></span>
+						</li>
+						<li>
+							<span class="setting-name">Platfrom</span
+							><span id="platform"></span>
+						</li>
+					</ul>
+				</li>
 			</ul>
 		</form>
 		<!-- Scripts -->
 		<script>
-			class Settings {
-				constructor() {}
-			}
-
 			const form = document.forms.namedItem("settings-form");
+			const language = document.getElementById("language");
+			const appCodeName = document.getElementById("app-code-name");
+			const vendor = document.getElementById("vendor");
+			const platform = document.getElementById("platform");
 
 			for (const key in settingKeys) {
 				const settingKey = settingKeys[key];
@@ -151,6 +177,7 @@
 						}
 					}
 				}
+
 				if (formElement instanceof HTMLSelectElement) {
 					for (let i = 0; i < formElement.options.length; i++) {
 						const option = formElement.options.item(i);
@@ -205,6 +232,11 @@
 					storeElement(element);
 				}
 			});
+
+			language.innerText = navigator.language;
+			appCodeName.innerText = navigator.appCodeName;
+			vendor.innerText = navigator.vendor;
+			platform.innerText = navigator.platform;
 		</script>
 	</body>
 </html>

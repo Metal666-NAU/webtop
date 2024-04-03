@@ -24,7 +24,7 @@ const taskbarIconTemplate = document.getElementById("taskbar-icon-template");
 class WindowFrame {
 	static borderWidth = 10;
 
-	/** @param {App} app  */
+	/** @param {App} app */
 	constructor(app) {
 		/** @type {DocumentFragment} */
 		const documentFragment = windowFrameTemplate.content.cloneNode(true);
@@ -156,6 +156,13 @@ class TaskbarIcon {
 		/** @type {DocumentFragment} */
 		const documentFragment = taskbarIconTemplate.content.cloneNode(true);
 
+		/** @type {HTMLButtonElement} */
+		const container = documentFragment.querySelector(
+			".taskbar-icon-container"
+		);
+
+		container.title = app.name;
+
 		/** @type {HTMLElement} */
 		const icon = documentFragment.querySelector(".taskbar-icon");
 
@@ -163,9 +170,7 @@ class TaskbarIcon {
 
 		this.documentFragment = documentFragment;
 		/** @type {HTMLButtonElement} */
-		this.container = documentFragment.querySelector(
-			".taskbar-icon-container"
-		);
+		this.container = container;
 		this.icon = icon;
 	}
 }
@@ -231,7 +236,7 @@ const url = new URL(location);
 /**
  * @param {App | string} app
  * @param {Array} args
- * */
+ */
 function runApp(app, args) {
 	const appId = app;
 
@@ -342,10 +347,17 @@ function stopApp(id) {
 }
 
 function sendTasks() {
-	dispatchEvent(new CustomEvent("tasks", { detail: tasks }));
+	/** @type {Map<string, App>} */
+	const tasksToSend = new Map();
+
+	for (const key of tasks.keys()) {
+		tasksToSend.set(key, tasks.get(key).app);
+	}
+
+	postMessage({ action: "tasks", tasks: tasksToSend });
 }
 
-/** @param {Task} task  */
+/** @param {Task} task */
 function moveWindowToTop(task) {
 	const windowFrame = task.window;
 	const topZIndex = tasks.size - 1;
@@ -382,9 +394,7 @@ function toggleClockSeconds(show) {
 	taskbarClockSeconds.style.display = show ? "inherit" : "none";
 }
 
-username.innerText = `Welcome back, ${localStorage.getItem(
-	settingKeys.username
-)}!`;
+username.innerText = localStorage.getItem(settingKeys.username);
 
 (function () {
 	const showError = () => (passwordError.style.display = "inherit");
@@ -578,12 +588,12 @@ async function loadDesktopWallpaper() {
 	}
 }
 
-/** @param {string} fit  */
+/** @param {string} fit */
 function updateDesktopWallpaperFit(fit) {
 	desktopWallpaper.style.objectFit = fit;
 }
 
-/** @param {string} width  */
+/** @param {string} width */
 function updateTaskbarWidth(width) {
 	document.documentElement.style.setProperty("--taskbar-width", `${width}px`);
 }
