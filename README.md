@@ -2,7 +2,7 @@
 
 This project is a desktop simulator that runs in a browser. This was my term paper for the "Web Technologies and Web Design" course. A live demo is deployed to GitHub Pages: https://metal666-nau.github.io/webtop/.
 
-![](screenshots/demo_recording.gif)
+https://github.com/user-attachments/assets/f23719ad-f73c-46a9-a24a-d83b66f5ee7e
 
 ## Desktop
 
